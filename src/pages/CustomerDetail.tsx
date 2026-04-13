@@ -39,6 +39,15 @@ export default function CustomerDetail() {
     toast({ title: "Markert som betalt", description: "Posten er oppdatert." });
   };
 
+  const markAsUnpaid = (paymentId: string) => {
+    setPayments((prev) =>
+      prev.map((p) =>
+        p.id === paymentId ? { ...p, paid: false, paidDate: undefined } : p
+      )
+    );
+    toast({ title: "Markert som ubetalt", description: "Posten er oppdatert." });
+  };
+
   const addPayment = (item: Omit<PaymentItem, "id">) => {
     const newItem: PaymentItem = { ...item, id: `p-${Date.now()}` };
     setPayments((prev) => [newItem, ...prev]);
@@ -130,6 +139,9 @@ export default function CustomerDetail() {
                     <div className="flex items-center gap-3">
                       <StatusBadge paid={true} dueDate={p.dueDate} />
                       <span className="text-sm font-medium w-24 text-right">{formatCurrency(p.amount)}</span>
+                      <Button size="sm" variant="ghost" onClick={() => markAsUnpaid(p.id)} className="text-muted-foreground">
+                        Angre
+                      </Button>
                     </div>
                   </div>
                 ))}
