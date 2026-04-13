@@ -8,6 +8,8 @@ export interface PaymentItem {
   paid: boolean;
   paidDate?: string;
   type: "monthly" | "annual" | "one-time";
+  paymentRequestStatus?: "pending" | "approved" | "rejected";
+  paymentRequestDate?: string;
 }
 
 export interface Customer {
