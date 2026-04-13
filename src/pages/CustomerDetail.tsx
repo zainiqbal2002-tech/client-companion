@@ -93,6 +93,13 @@ export default function CustomerDetail() {
               )}
             </div>
           </div>
+          <EditCustomerDialog
+            customer={customer}
+            onSave={(updated) => {
+              setCustomer(updated);
+              toast({ title: "Kunde oppdatert", description: updated.name });
+            }}
+          />
         </div>
       </header>
 
