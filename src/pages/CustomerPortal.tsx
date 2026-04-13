@@ -3,6 +3,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { SummaryCard } from "@/components/SummaryCard";
 import { StatusBadge } from "@/components/StatusBadge";
+import { PartialPaymentDialog } from "@/components/PartialPaymentDialog";
+import { PaymentProgress } from "@/components/PaymentProgress";
 import { mockCustomers, mockPayments } from "@/data/mockData";
 import { formatCurrency, formatDate } from "@/lib/format";
 import { Banknote, AlertTriangle, ArrowLeft, Send, Clock } from "lucide-react";
@@ -17,21 +19,21 @@ export default function CustomerPortal() {
     mockPayments.filter((p) => p.customerId === customer.id)
   );
 
-  const outstanding = payments.filter((p) => !p.paid).reduce((s, p) => s + p.amount, 0);
+  const outstanding = payments.filter((p) => !p.paid).reduce((s, p) => s + (p.amount - p.amountPaid), 0);
   const overdueCount = payments.filter((p) => !p.paid && new Date(p.dueDate) < new Date()).length;
 
   const unpaid = payments.filter((p) => !p.paid);
   const paidItems = payments.filter((p) => p.paid);
 
-  const sendPaymentRequest = (paymentId: string) => {
+  const sendPaymentRequest = (paymentId: string, requestAmount: number) => {
     setPayments((prev) =>
       prev.map((p) =>
         p.id === paymentId
-          ? { ...p, paymentRequestStatus: "pending" as const, paymentRequestDate: new Date().toISOString().split("T")[0] }
+          ? { ...p, paymentRequestStatus: "pending" as const, paymentRequestDate: new Date().toISOString().split("T")[0], paymentRequestAmount: requestAmount }
           : p
       )
     );
-    toast({ title: "Forespørsel sendt", description: "Admin vil bli varslet og må godkjenne betalingen." });
+    toast({ title: "Forespørsel sendt", description: `Meldt inn ${formatCurrency(requestAmount)} – venter på godkjenning.` });
   };
 
   return (
@@ -71,31 +73,39 @@ export default function CustomerPortal() {
             ) : (
               <div className="divide-y">
                 {unpaid.map((p) => (
-                  <div key={p.id} className="flex items-center justify-between px-5 py-3">
-                    <div>
-                      <p className="text-sm font-medium">{p.description}</p>
-                      <p className="text-xs text-muted-foreground">Forfall: {formatDate(p.dueDate)}</p>
+                  <div key={p.id} className="px-5 py-3 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium">{p.description}</p>
+                        <p className="text-xs text-muted-foreground">
+                          Forfall: {formatDate(p.dueDate)}
+                          {p.amountPaid > 0 && ` · Betalt ${formatCurrency(p.amountPaid)} av ${formatCurrency(p.amount)}`}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <StatusBadge paid={false} dueDate={p.dueDate} />
+                        <span className="text-sm font-semibold">{formatCurrency(p.amount - p.amountPaid)}</span>
+                        {p.paymentRequestStatus === "pending" ? (
+                          <Badge variant="outline" className="gap-1 text-muted-foreground">
+                            <Clock className="h-3 w-3" />
+                            Venter ({formatCurrency(p.paymentRequestAmount ?? 0)})
+                          </Badge>
+                        ) : (
+                          <PartialPaymentDialog
+                            amount={p.amount}
+                            amountPaid={p.amountPaid}
+                            onConfirm={(amt) => sendPaymentRequest(p.id, amt)}
+                            trigger={
+                              <Button size="sm" variant="outline">
+                                <Send className="mr-1.5 h-3.5 w-3.5" />
+                                Meld betalt
+                              </Button>
+                            }
+                          />
+                        )}
+                      </div>
                     </div>
-                    <div className="flex items-center gap-3">
-                      <StatusBadge paid={false} dueDate={p.dueDate} />
-                      <span className="text-sm font-semibold">{formatCurrency(p.amount)}</span>
-                      {p.paymentRequestStatus === "pending" ? (
-                        <Badge variant="outline" className="gap-1 text-muted-foreground">
-                          <Clock className="h-3 w-3" />
-                          Venter
-                        </Badge>
-                      ) : p.paymentRequestStatus === "rejected" ? (
-                        <Button size="sm" variant="outline" onClick={() => sendPaymentRequest(p.id)}>
-                          <Send className="mr-1.5 h-3.5 w-3.5" />
-                          Send på nytt
-                        </Button>
-                      ) : (
-                        <Button size="sm" variant="outline" onClick={() => sendPaymentRequest(p.id)}>
-                          <Send className="mr-1.5 h-3.5 w-3.5" />
-                          Meld betalt
-                        </Button>
-                      )}
-                    </div>
+                    <PaymentProgress amount={p.amount} amountPaid={p.amountPaid} />
                   </div>
                 ))}
               </div>

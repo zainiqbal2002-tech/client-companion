@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { SummaryCard } from "@/components/SummaryCard";
 import { StatusBadge } from "@/components/StatusBadge";
 import { AddPaymentDialog } from "@/components/AddPaymentDialog";
+import { PartialPaymentDialog } from "@/components/PartialPaymentDialog";
+import { PaymentProgress } from "@/components/PaymentProgress";
 import { mockCustomers, mockPayments } from "@/data/mockData";
 import { formatCurrency, formatDate } from "@/lib/format";
 import { PaymentItem } from "@/types";
@@ -26,26 +28,34 @@ export default function CustomerDetail() {
     );
   }
 
-  const outstanding = payments.filter((p) => !p.paid).reduce((s, p) => s + p.amount, 0);
-  const paid = payments.filter((p) => p.paid).reduce((s, p) => s + p.amount, 0);
+  const outstanding = payments.filter((p) => !p.paid).reduce((s, p) => s + (p.amount - p.amountPaid), 0);
+  const paid = payments.reduce((s, p) => s + p.amountPaid, 0);
   const overdueCount = payments.filter((p) => !p.paid && new Date(p.dueDate) < new Date()).length;
 
-  const markAsPaid = (paymentId: string) => {
+  const handlePartialPayment = (paymentId: string, partialAmount: number) => {
     setPayments((prev) =>
-      prev.map((p) =>
-        p.id === paymentId ? { ...p, paid: true, paidDate: new Date().toISOString().split("T")[0] } : p
-      )
+      prev.map((p) => {
+        if (p.id !== paymentId) return p;
+        const newPaid = p.amountPaid + partialAmount;
+        const fullyPaid = newPaid >= p.amount;
+        return {
+          ...p,
+          amountPaid: Math.min(newPaid, p.amount),
+          paid: fullyPaid,
+          paidDate: fullyPaid ? new Date().toISOString().split("T")[0] : p.paidDate,
+        };
+      })
     );
-    toast({ title: "Markert som betalt", description: "Posten er oppdatert." });
+    toast({ title: "Betaling registrert", description: `${formatCurrency(partialAmount)} registrert.` });
   };
 
   const markAsUnpaid = (paymentId: string) => {
     setPayments((prev) =>
       prev.map((p) =>
-        p.id === paymentId ? { ...p, paid: false, paidDate: undefined } : p
+        p.id === paymentId ? { ...p, paid: false, paidDate: undefined, amountPaid: 0 } : p
       )
     );
-    toast({ title: "Markert som ubetalt", description: "Posten er oppdatert." });
+    toast({ title: "Markert som ubetalt", description: "Posten er tilbakestilt." });
   };
 
   const addPayment = (item: Omit<PaymentItem, "id">) => {
@@ -89,7 +99,6 @@ export default function CustomerDetail() {
           <span>Abonnement: {formatCurrency(customer.monthlyAmount)}/mnd{customer.annualAmount ? ` + ${formatCurrency(customer.annualAmount)}/år` : ""}</span>
         </div>
 
-        {/* Unpaid */}
         <Card>
           <CardHeader className="flex-row items-center justify-between space-y-0 pb-3">
             <CardTitle className="text-base">Ubetalte poster ({unpaid.length})</CardTitle>
@@ -101,18 +110,27 @@ export default function CustomerDetail() {
             ) : (
               <div className="divide-y">
                 {unpaid.map((p) => (
-                  <div key={p.id} className="flex items-center justify-between px-5 py-3">
-                    <div className="min-w-0 flex-1">
-                      <p className="text-sm font-medium">{p.description}</p>
-                      <p className="text-xs text-muted-foreground">Forfall: {formatDate(p.dueDate)}</p>
+                  <div key={p.id} className="px-5 py-3 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-medium">{p.description}</p>
+                        <p className="text-xs text-muted-foreground">
+                          Forfall: {formatDate(p.dueDate)}
+                          {p.amountPaid > 0 && ` · Betalt ${formatCurrency(p.amountPaid)} av ${formatCurrency(p.amount)}`}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <StatusBadge paid={false} dueDate={p.dueDate} />
+                        <span className="text-sm font-semibold w-24 text-right">{formatCurrency(p.amount - p.amountPaid)}</span>
+                        <PartialPaymentDialog
+                          amount={p.amount}
+                          amountPaid={p.amountPaid}
+                          onConfirm={(amt) => handlePartialPayment(p.id, amt)}
+                          trigger={<Button size="sm" variant="outline">Registrer betaling</Button>}
+                        />
+                      </div>
                     </div>
-                    <div className="flex items-center gap-3">
-                      <StatusBadge paid={false} dueDate={p.dueDate} />
-                      <span className="text-sm font-semibold w-24 text-right">{formatCurrency(p.amount)}</span>
-                      <Button size="sm" variant="outline" onClick={() => markAsPaid(p.id)}>
-                        Merk betalt
-                      </Button>
-                    </div>
+                    <PaymentProgress amount={p.amount} amountPaid={p.amountPaid} />
                   </div>
                 ))}
               </div>
@@ -120,7 +138,6 @@ export default function CustomerDetail() {
           </CardContent>
         </Card>
 
-        {/* Paid */}
         <Card>
           <CardHeader>
             <CardTitle className="text-base">Betalte poster ({paidItems.length})</CardTitle>
