@@ -39,6 +39,15 @@ export default function CustomerDetail() {
     toast({ title: "Markert som betalt", description: "Posten er oppdatert." });
   };
 
+  const markAsUnpaid = (paymentId: string) => {
+    setPayments((prev) =>
+      prev.map((p) =>
+        p.id === paymentId ? { ...p, paid: false, paidDate: undefined } : p
+      )
+    );
+    toast({ title: "Markert som ubetalt", description: "Posten er oppdatert." });
+  };
+
   const addPayment = (item: Omit<PaymentItem, "id">) => {
     const newItem: PaymentItem = { ...item, id: `p-${Date.now()}` };
     setPayments((prev) => [newItem, ...prev]);
