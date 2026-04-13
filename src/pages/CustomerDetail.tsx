@@ -118,6 +118,7 @@ export default function CustomerDetail() {
                           Forfall: {formatDate(p.dueDate)}
                           {p.amountPaid > 0 && ` · Betalt ${formatCurrency(p.amountPaid)} av ${formatCurrency(p.amount)}`}
                         </p>
+                        {p.notes && <p className="text-xs text-muted-foreground mt-1 italic">{p.notes}</p>}
                       </div>
                       <div className="flex items-center gap-3">
                         <StatusBadge paid={false} dueDate={p.dueDate} />

@@ -9,6 +9,7 @@ export interface PaymentItem {
   paid: boolean;
   paidDate?: string;
   type: "monthly" | "annual" | "one-time";
+  notes?: string;
   paymentRequestStatus?: "pending" | "approved" | "rejected";
   paymentRequestDate?: string;
   paymentRequestAmount?: number;
