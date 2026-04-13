@@ -7,6 +7,7 @@ import { StatusBadge } from "@/components/StatusBadge";
 import { AddPaymentDialog } from "@/components/AddPaymentDialog";
 import { PartialPaymentDialog } from "@/components/PartialPaymentDialog";
 import { PaymentProgress } from "@/components/PaymentProgress";
+import { EditPaymentDialog } from "@/components/EditPaymentDialog";
 import { mockCustomers, mockPayments } from "@/data/mockData";
 import { formatCurrency, formatDate } from "@/lib/format";
 import { PaymentItem } from "@/types";
@@ -62,6 +63,11 @@ export default function CustomerDetail() {
     const newItem: PaymentItem = { ...item, id: `p-${Date.now()}` };
     setPayments((prev) => [newItem, ...prev]);
     toast({ title: "Post lagt til", description: item.description });
+  };
+
+  const updatePayment = (updated: PaymentItem) => {
+    setPayments((prev) => prev.map((p) => (p.id === updated.id ? updated : p)));
+    toast({ title: "Post oppdatert", description: updated.description });
   };
 
   const unpaid = payments.filter((p) => !p.paid);
@@ -120,9 +126,10 @@ export default function CustomerDetail() {
                         </p>
                         {p.notes && <p className="text-xs text-muted-foreground mt-1 italic">{p.notes}</p>}
                       </div>
-                      <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-2">
                         <StatusBadge paid={false} dueDate={p.dueDate} />
                         <span className="text-sm font-semibold w-24 text-right">{formatCurrency(p.amount - p.amountPaid)}</span>
+                        <EditPaymentDialog payment={p} onSave={updatePayment} />
                         <PartialPaymentDialog
                           amount={p.amount}
                           amountPaid={p.amountPaid}
