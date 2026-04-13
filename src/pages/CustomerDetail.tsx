@@ -65,6 +65,11 @@ export default function CustomerDetail() {
     toast({ title: "Post lagt til", description: item.description });
   };
 
+  const updatePayment = (updated: PaymentItem) => {
+    setPayments((prev) => prev.map((p) => (p.id === updated.id ? updated : p)));
+    toast({ title: "Post oppdatert", description: updated.description });
+  };
+
   const unpaid = payments.filter((p) => !p.paid);
   const paidItems = payments.filter((p) => p.paid);
 
