@@ -7,6 +7,7 @@ import { StatusBadge } from "@/components/StatusBadge";
 import { AddPaymentDialog } from "@/components/AddPaymentDialog";
 import { PartialPaymentDialog } from "@/components/PartialPaymentDialog";
 import { PaymentProgress } from "@/components/PaymentProgress";
+import { EditPaymentDialog } from "@/components/EditPaymentDialog";
 import { mockCustomers, mockPayments } from "@/data/mockData";
 import { formatCurrency, formatDate } from "@/lib/format";
 import { PaymentItem } from "@/types";
