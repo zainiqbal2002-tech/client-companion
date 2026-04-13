@@ -35,15 +35,18 @@ export function EditPaymentDialog({ payment, onSave }: EditPaymentDialogProps) {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const newAmount = Number(amount);
+    const newAmountPaid = Math.min(payment.amountPaid, newAmount);
+    const fullyPaid = newAmountPaid >= newAmount && newAmount > 0;
     onSave({
       ...payment,
       description,
       notes: notes || undefined,
       amount: newAmount,
-      amountPaid: Math.min(payment.amountPaid, newAmount),
+      amountPaid: newAmountPaid,
       dueDate,
       type,
-      paid: payment.amountPaid >= newAmount && newAmount > 0,
+      paid: fullyPaid,
+      paidDate: fullyPaid ? (payment.paidDate ?? new Date().toISOString().split("T")[0]) : payment.paidDate,
     });
     setOpen(false);
   };

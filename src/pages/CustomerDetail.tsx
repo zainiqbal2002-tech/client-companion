@@ -159,7 +159,7 @@ export default function CustomerDetail() {
                   <div key={p.id} className="flex items-center justify-between px-5 py-3 opacity-70">
                     <div className="min-w-0 flex-1">
                       <p className="text-sm font-medium">{p.description}</p>
-                      <p className="text-xs text-muted-foreground">Betalt: {formatDate(p.paidDate!)}</p>
+                      <p className="text-xs text-muted-foreground">Betalt: {p.paidDate ? formatDate(p.paidDate) : "–"}</p>
                     </div>
                     <div className="flex items-center gap-3">
                       <StatusBadge paid={true} dueDate={p.dueDate} />
