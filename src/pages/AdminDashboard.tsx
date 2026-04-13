@@ -14,25 +14,34 @@ export default function AdminDashboard() {
   const [payments, setPayments] = useState<PaymentItem[]>(mockPayments);
   const customers = mockCustomers;
 
-  const totalOutstanding = payments.filter((p) => !p.paid).reduce((s, p) => s + p.amount, 0);
-  const totalPaid = payments.filter((p) => p.paid).reduce((s, p) => s + p.amount, 0);
+  const totalOutstanding = payments.filter((p) => !p.paid).reduce((s, p) => s + (p.amount - p.amountPaid), 0);
+  const totalPaid = payments.reduce((s, p) => s + p.amountPaid, 0);
   const overdueCount = payments.filter((p) => !p.paid && new Date(p.dueDate) < new Date()).length;
 
   const pendingRequests = payments.filter((p) => p.paymentRequestStatus === "pending");
 
   const getCustomerBalance = (id: string) =>
-    payments.filter((p) => p.customerId === id && !p.paid).reduce((s, p) => s + p.amount, 0);
+    payments.filter((p) => p.customerId === id && !p.paid).reduce((s, p) => s + (p.amount - p.amountPaid), 0);
 
   const getCustomerName = (id: string) =>
     customers.find((c) => c.id === id)?.name ?? "Ukjent";
 
   const approveRequest = (paymentId: string) => {
     setPayments((prev) =>
-      prev.map((p) =>
-        p.id === paymentId
-          ? { ...p, paid: true, paidDate: new Date().toISOString().split("T")[0], paymentRequestStatus: "approved" as const }
-          : p
-      )
+      prev.map((p) => {
+        if (p.id !== paymentId) return p;
+        const requestAmt = p.paymentRequestAmount ?? (p.amount - p.amountPaid);
+        const newPaid = p.amountPaid + requestAmt;
+        const fullyPaid = newPaid >= p.amount;
+        return {
+          ...p,
+          amountPaid: Math.min(newPaid, p.amount),
+          paid: fullyPaid,
+          paidDate: fullyPaid ? new Date().toISOString().split("T")[0] : p.paidDate,
+          paymentRequestStatus: "approved" as const,
+          paymentRequestAmount: undefined,
+        };
+      })
     );
     toast({ title: "Godkjent", description: "Betalingen er registrert." });
   };
@@ -79,26 +88,37 @@ export default function AdminDashboard() {
             </CardHeader>
             <CardContent className="p-0">
               <div className="divide-y">
-                {pendingRequests.map((p) => (
-                  <div key={p.id} className="flex items-center justify-between px-5 py-3">
-                    <div className="min-w-0 flex-1">
-                      <p className="text-sm font-medium">{p.description}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {getCustomerName(p.customerId)} · {formatDate(p.paymentRequestDate!)}
-                      </p>
+                {pendingRequests.map((p) => {
+                  const reqAmt = p.paymentRequestAmount ?? (p.amount - p.amountPaid);
+                  const pct = Math.round((reqAmt / p.amount) * 100);
+                  const isPartial = reqAmt < (p.amount - p.amountPaid);
+                  return (
+                    <div key={p.id} className="flex items-center justify-between px-5 py-3">
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-medium">{p.description}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {getCustomerName(p.customerId)} · {formatDate(p.paymentRequestDate!)}
+                          {isPartial && ` · Delvis betaling`}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="text-right">
+                          <span className="text-sm font-semibold">{formatCurrency(reqAmt)}</span>
+                          {isPartial && (
+                            <p className="text-xs text-muted-foreground">{pct}% av {formatCurrency(p.amount)}</p>
+                          )}
+                        </div>
+                        <Button size="sm" variant="default" onClick={() => approveRequest(p.id)} className="gap-1">
+                          <Check className="h-3.5 w-3.5" />
+                          Godkjenn
+                        </Button>
+                        <Button size="sm" variant="ghost" onClick={() => rejectRequest(p.id)} className="text-muted-foreground">
+                          <X className="h-3.5 w-3.5" />
+                        </Button>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm font-semibold">{formatCurrency(p.amount)}</span>
-                      <Button size="sm" variant="default" onClick={() => approveRequest(p.id)} className="gap-1">
-                        <Check className="h-3.5 w-3.5" />
-                        Godkjenn
-                      </Button>
-                      <Button size="sm" variant="ghost" onClick={() => rejectRequest(p.id)} className="text-muted-foreground">
-                        <X className="h-3.5 w-3.5" />
-                      </Button>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </CardContent>
           </Card>

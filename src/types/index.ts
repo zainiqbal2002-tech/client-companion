@@ -3,6 +3,7 @@ export interface PaymentItem {
   customerId: string;
   description: string;
   amount: number;
+  amountPaid: number;
   date: string;
   dueDate: string;
   paid: boolean;
@@ -10,6 +11,7 @@ export interface PaymentItem {
   type: "monthly" | "annual" | "one-time";
   paymentRequestStatus?: "pending" | "approved" | "rejected";
   paymentRequestDate?: string;
+  paymentRequestAmount?: number;
 }
 
 export interface Customer {

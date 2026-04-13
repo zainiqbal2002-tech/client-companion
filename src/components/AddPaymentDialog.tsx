@@ -25,6 +25,7 @@ export function AddPaymentDialog({ customerId, onAdd }: AddPaymentDialogProps) {
       customerId,
       description,
       amount: Number(amount),
+      amountPaid: 0,
       date: new Date().toISOString().split("T")[0],
       dueDate,
       paid: false,
