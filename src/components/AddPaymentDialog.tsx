@@ -3,6 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus } from "lucide-react";
 import { PaymentItem } from "@/types";
@@ -15,6 +16,7 @@ interface AddPaymentDialogProps {
 export function AddPaymentDialog({ customerId, onAdd }: AddPaymentDialogProps) {
   const [open, setOpen] = useState(false);
   const [description, setDescription] = useState("");
+  const [notes, setNotes] = useState("");
   const [amount, setAmount] = useState("");
   const [dueDate, setDueDate] = useState("");
   const [type, setType] = useState<"monthly" | "annual" | "one-time">("one-time");
@@ -24,6 +26,7 @@ export function AddPaymentDialog({ customerId, onAdd }: AddPaymentDialogProps) {
     onAdd({
       customerId,
       description,
+      notes: notes || undefined,
       amount: Number(amount),
       amountPaid: 0,
       date: new Date().toISOString().split("T")[0],
@@ -31,10 +34,7 @@ export function AddPaymentDialog({ customerId, onAdd }: AddPaymentDialogProps) {
       paid: false,
       type,
     });
-    setDescription("");
-    setAmount("");
-    setDueDate("");
-    setType("one-time");
+    setDescription(""); setNotes(""); setAmount(""); setDueDate(""); setType("one-time");
     setOpen(false);
   };
 
@@ -54,6 +54,10 @@ export function AddPaymentDialog({ customerId, onAdd }: AddPaymentDialogProps) {
           <div className="space-y-2">
             <Label htmlFor="description">Beskrivelse</Label>
             <Input id="description" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="F.eks. Regnskap april" required />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="notes">Tilleggsinformasjon (valgfritt)</Label>
+            <Textarea id="notes" value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Ekstra informasjon til kunden..." rows={3} />
           </div>
           <div className="space-y-2">
             <Label htmlFor="amount">Beløp (NOK)</Label>
