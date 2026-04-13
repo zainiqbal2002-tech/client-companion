@@ -2,17 +2,19 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import { SummaryCard } from "@/components/SummaryCard";
+import { AddCustomerDialog } from "@/components/AddCustomerDialog";
 import { mockCustomers, mockPayments } from "@/data/mockData";
 import { formatCurrency, formatDate } from "@/lib/format";
-import { PaymentItem } from "@/types";
-import { Users, Banknote, AlertTriangle, CheckCircle2, ChevronRight, Inbox, Check, X } from "lucide-react";
+import { PaymentItem, Customer } from "@/types";
+import { Users, Banknote, AlertTriangle, CheckCircle2, ChevronRight, Inbox, Check, X, Search } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 
 export default function AdminDashboard() {
   const [payments, setPayments] = useState<PaymentItem[]>(mockPayments);
-  const customers = mockCustomers;
+  const [customers, setCustomers] = useState<Customer[]>(mockCustomers);
+  const [search, setSearch] = useState("");
 
   const totalOutstanding = payments.filter((p) => !p.paid).reduce((s, p) => s + (p.amount - p.amountPaid), 0);
   const totalPaid = payments.reduce((s, p) => s + p.amountPaid, 0);
@@ -57,6 +59,16 @@ export default function AdminDashboard() {
     toast({ title: "Avvist", description: "Forespørselen er avvist." });
   };
 
+  const addCustomer = (customer: Customer) => {
+    setCustomers((prev) => [...prev, customer]);
+    toast({ title: "Kunde opprettet", description: customer.name });
+  };
+
+  const q = search.toLowerCase();
+  const filteredCustomers = q
+    ? customers.filter((c) => c.name.toLowerCase().includes(q) || c.email.toLowerCase().includes(q))
+    : customers;
+
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b bg-card">
@@ -79,7 +91,6 @@ export default function AdminDashboard() {
           <SummaryCard title="Innbetalt" value={formatCurrency(totalPaid)} icon={CheckCircle2} variant="success" />
         </div>
 
-        {/* Pending payment requests */}
         {pendingRequests.length > 0 && (
           <Card className="border-primary/30">
             <CardHeader className="flex-row items-center gap-2 space-y-0 pb-3">
@@ -125,42 +136,58 @@ export default function AdminDashboard() {
         )}
 
         <Card>
-          <CardHeader>
+          <CardHeader className="flex-row items-center justify-between space-y-0 pb-3">
             <CardTitle className="text-base">Alle kunder</CardTitle>
+            <AddCustomerDialog onAdd={addCustomer} />
           </CardHeader>
           <CardContent className="p-0">
+            <div className="px-5 pb-3">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  placeholder="Søk etter kunde..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="pl-9"
+                />
+              </div>
+            </div>
             <div className="divide-y">
-              {customers.map((c) => {
-                const balance = getCustomerBalance(c.id);
-                const paidCount = payments.filter((p) => p.customerId === c.id && p.paid).length;
-                const unpaidCount = payments.filter((p) => p.customerId === c.id && !p.paid).length;
+              {filteredCustomers.length === 0 ? (
+                <p className="px-5 py-8 text-center text-sm text-muted-foreground">Ingen kunder funnet</p>
+              ) : (
+                filteredCustomers.map((c) => {
+                  const balance = getCustomerBalance(c.id);
+                  const paidCount = payments.filter((p) => p.customerId === c.id && p.paid).length;
+                  const unpaidCount = payments.filter((p) => p.customerId === c.id && !p.paid).length;
 
-                return (
-                  <Link
-                    key={c.id}
-                    to={`/admin/customer/${c.id}`}
-                    className="flex items-center justify-between px-5 py-4 hover:bg-secondary/50 transition-colors"
-                  >
-                    <div className="min-w-0 flex-1">
-                      <p className="font-medium truncate">{c.name}</p>
-                      <p className="text-sm text-muted-foreground">
-                        {formatCurrency(c.monthlyAmount)}/mnd · {paidCount} betalt · {unpaidCount} ubetalt
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      {balance > 0 && (
-                        <span className="text-sm font-semibold text-overdue">
-                          {formatCurrency(balance)}
-                        </span>
-                      )}
-                      {balance === 0 && (
-                        <span className="text-sm font-medium text-success">À jour</span>
-                      )}
-                      <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                    </div>
-                  </Link>
-                );
-              })}
+                  return (
+                    <Link
+                      key={c.id}
+                      to={`/admin/customer/${c.id}`}
+                      className="flex items-center justify-between px-5 py-4 hover:bg-secondary/50 transition-colors"
+                    >
+                      <div className="min-w-0 flex-1">
+                        <p className="font-medium truncate">{c.name}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {formatCurrency(c.monthlyAmount)}/mnd · {paidCount} betalt · {unpaidCount} ubetalt
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        {balance > 0 && (
+                          <span className="text-sm font-semibold text-overdue">
+                            {formatCurrency(balance)}
+                          </span>
+                        )}
+                        {balance === 0 && (
+                          <span className="text-sm font-medium text-success">À jour</span>
+                        )}
+                        <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                      </div>
+                    </Link>
+                  );
+                })
+              )}
             </div>
           </CardContent>
         </Card>
