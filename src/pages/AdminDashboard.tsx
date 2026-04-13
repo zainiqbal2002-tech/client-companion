@@ -14,25 +14,34 @@ export default function AdminDashboard() {
   const [payments, setPayments] = useState<PaymentItem[]>(mockPayments);
   const customers = mockCustomers;
 
-  const totalOutstanding = payments.filter((p) => !p.paid).reduce((s, p) => s + p.amount, 0);
-  const totalPaid = payments.filter((p) => p.paid).reduce((s, p) => s + p.amount, 0);
+  const totalOutstanding = payments.filter((p) => !p.paid).reduce((s, p) => s + (p.amount - p.amountPaid), 0);
+  const totalPaid = payments.reduce((s, p) => s + p.amountPaid, 0);
   const overdueCount = payments.filter((p) => !p.paid && new Date(p.dueDate) < new Date()).length;
 
   const pendingRequests = payments.filter((p) => p.paymentRequestStatus === "pending");
 
   const getCustomerBalance = (id: string) =>
-    payments.filter((p) => p.customerId === id && !p.paid).reduce((s, p) => s + p.amount, 0);
+    payments.filter((p) => p.customerId === id && !p.paid).reduce((s, p) => s + (p.amount - p.amountPaid), 0);
 
   const getCustomerName = (id: string) =>
     customers.find((c) => c.id === id)?.name ?? "Ukjent";
 
   const approveRequest = (paymentId: string) => {
     setPayments((prev) =>
-      prev.map((p) =>
-        p.id === paymentId
-          ? { ...p, paid: true, paidDate: new Date().toISOString().split("T")[0], paymentRequestStatus: "approved" as const }
-          : p
-      )
+      prev.map((p) => {
+        if (p.id !== paymentId) return p;
+        const requestAmt = p.paymentRequestAmount ?? (p.amount - p.amountPaid);
+        const newPaid = p.amountPaid + requestAmt;
+        const fullyPaid = newPaid >= p.amount;
+        return {
+          ...p,
+          amountPaid: Math.min(newPaid, p.amount),
+          paid: fullyPaid,
+          paidDate: fullyPaid ? new Date().toISOString().split("T")[0] : p.paidDate,
+          paymentRequestStatus: "approved" as const,
+          paymentRequestAmount: undefined,
+        };
+      })
     );
     toast({ title: "Godkjent", description: "Betalingen er registrert." });
   };
