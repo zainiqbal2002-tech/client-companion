@@ -8,15 +8,17 @@ import { AddPaymentDialog } from "@/components/AddPaymentDialog";
 import { PartialPaymentDialog } from "@/components/PartialPaymentDialog";
 import { PaymentProgress } from "@/components/PaymentProgress";
 import { EditPaymentDialog } from "@/components/EditPaymentDialog";
+import { EditCustomerDialog } from "@/components/EditCustomerDialog";
 import { mockCustomers, mockPayments } from "@/data/mockData";
 import { formatCurrency, formatDate } from "@/lib/format";
-import { PaymentItem } from "@/types";
+import { PaymentItem, Customer } from "@/types";
 import { ArrowLeft, Banknote, CheckCircle2, AlertTriangle, Mail, Phone } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 
 export default function CustomerDetail() {
   const { id } = useParams<{ id: string }>();
-  const customer = mockCustomers.find((c) => c.id === id);
+  const initialCustomer = mockCustomers.find((c) => c.id === id);
+  const [customer, setCustomer] = useState<Customer | undefined>(initialCustomer);
   const [payments, setPayments] = useState<PaymentItem[]>(
     mockPayments.filter((p) => p.customerId === id)
   );
