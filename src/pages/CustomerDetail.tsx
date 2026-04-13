@@ -130,6 +130,9 @@ export default function CustomerDetail() {
                     <div className="flex items-center gap-3">
                       <StatusBadge paid={true} dueDate={p.dueDate} />
                       <span className="text-sm font-medium w-24 text-right">{formatCurrency(p.amount)}</span>
+                      <Button size="sm" variant="ghost" onClick={() => markAsUnpaid(p.id)} className="text-muted-foreground">
+                        Angre
+                      </Button>
                     </div>
                   </div>
                 ))}
