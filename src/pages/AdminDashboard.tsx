@@ -1,21 +1,52 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { SummaryCard } from "@/components/SummaryCard";
 import { mockCustomers, mockPayments } from "@/data/mockData";
-import { formatCurrency } from "@/lib/format";
-import { Users, Banknote, AlertTriangle, CheckCircle2, ChevronRight } from "lucide-react";
+import { formatCurrency, formatDate } from "@/lib/format";
+import { PaymentItem } from "@/types";
+import { Users, Banknote, AlertTriangle, CheckCircle2, ChevronRight, Inbox, Check, X } from "lucide-react";
+import { toast } from "@/hooks/use-toast";
 
 export default function AdminDashboard() {
-  const [payments] = useState(mockPayments);
+  const [payments, setPayments] = useState<PaymentItem[]>(mockPayments);
   const customers = mockCustomers;
 
   const totalOutstanding = payments.filter((p) => !p.paid).reduce((s, p) => s + p.amount, 0);
   const totalPaid = payments.filter((p) => p.paid).reduce((s, p) => s + p.amount, 0);
   const overdueCount = payments.filter((p) => !p.paid && new Date(p.dueDate) < new Date()).length;
 
+  const pendingRequests = payments.filter((p) => p.paymentRequestStatus === "pending");
+
   const getCustomerBalance = (id: string) =>
     payments.filter((p) => p.customerId === id && !p.paid).reduce((s, p) => s + p.amount, 0);
+
+  const getCustomerName = (id: string) =>
+    customers.find((c) => c.id === id)?.name ?? "Ukjent";
+
+  const approveRequest = (paymentId: string) => {
+    setPayments((prev) =>
+      prev.map((p) =>
+        p.id === paymentId
+          ? { ...p, paid: true, paidDate: new Date().toISOString().split("T")[0], paymentRequestStatus: "approved" as const }
+          : p
+      )
+    );
+    toast({ title: "Godkjent", description: "Betalingen er registrert." });
+  };
+
+  const rejectRequest = (paymentId: string) => {
+    setPayments((prev) =>
+      prev.map((p) =>
+        p.id === paymentId
+          ? { ...p, paymentRequestStatus: "rejected" as const }
+          : p
+      )
+    );
+    toast({ title: "Avvist", description: "Forespørselen er avvist." });
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -38,6 +69,40 @@ export default function AdminDashboard() {
           <SummaryCard title="Forfalt" value={String(overdueCount)} icon={AlertTriangle} variant="overdue" />
           <SummaryCard title="Innbetalt" value={formatCurrency(totalPaid)} icon={CheckCircle2} variant="success" />
         </div>
+
+        {/* Pending payment requests */}
+        {pendingRequests.length > 0 && (
+          <Card className="border-primary/30">
+            <CardHeader className="flex-row items-center gap-2 space-y-0 pb-3">
+              <Inbox className="h-4 w-4 text-primary" />
+              <CardTitle className="text-base">Betalingsforespørsler ({pendingRequests.length})</CardTitle>
+            </CardHeader>
+            <CardContent className="p-0">
+              <div className="divide-y">
+                {pendingRequests.map((p) => (
+                  <div key={p.id} className="flex items-center justify-between px-5 py-3">
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-medium">{p.description}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {getCustomerName(p.customerId)} · {formatDate(p.paymentRequestDate!)}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-semibold">{formatCurrency(p.amount)}</span>
+                      <Button size="sm" variant="default" onClick={() => approveRequest(p.id)} className="gap-1">
+                        <Check className="h-3.5 w-3.5" />
+                        Godkjenn
+                      </Button>
+                      <Button size="sm" variant="ghost" onClick={() => rejectRequest(p.id)} className="text-muted-foreground">
+                        <X className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         <Card>
           <CardHeader>

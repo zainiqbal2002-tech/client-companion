@@ -1,23 +1,38 @@
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { SummaryCard } from "@/components/SummaryCard";
 import { StatusBadge } from "@/components/StatusBadge";
 import { mockCustomers, mockPayments } from "@/data/mockData";
 import { formatCurrency, formatDate } from "@/lib/format";
-import { Banknote, CheckCircle2, AlertTriangle, ArrowLeft } from "lucide-react";
+import { Banknote, AlertTriangle, ArrowLeft, Send, Clock } from "lucide-react";
 import { Link } from "react-router-dom";
+import { PaymentItem } from "@/types";
+import { toast } from "@/hooks/use-toast";
+import { Badge } from "@/components/ui/badge";
 
 export default function CustomerPortal() {
-  // For demo: show customer 1's data
   const customer = mockCustomers[0];
-  const [payments] = useState(mockPayments.filter((p) => p.customerId === customer.id));
+  const [payments, setPayments] = useState<PaymentItem[]>(
+    mockPayments.filter((p) => p.customerId === customer.id)
+  );
 
   const outstanding = payments.filter((p) => !p.paid).reduce((s, p) => s + p.amount, 0);
-  const paid = payments.filter((p) => p.paid).reduce((s, p) => s + p.amount, 0);
   const overdueCount = payments.filter((p) => !p.paid && new Date(p.dueDate) < new Date()).length;
 
   const unpaid = payments.filter((p) => !p.paid);
   const paidItems = payments.filter((p) => p.paid);
+
+  const sendPaymentRequest = (paymentId: string) => {
+    setPayments((prev) =>
+      prev.map((p) =>
+        p.id === paymentId
+          ? { ...p, paymentRequestStatus: "pending" as const, paymentRequestDate: new Date().toISOString().split("T")[0] }
+          : p
+      )
+    );
+    toast({ title: "Forespørsel sendt", description: "Admin vil bli varslet og må godkjenne betalingen." });
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -34,10 +49,9 @@ export default function CustomerPortal() {
       </header>
 
       <main className="mx-auto max-w-5xl px-4 py-6 space-y-6">
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-2 gap-3">
           <SummaryCard title="Skyldig" value={formatCurrency(outstanding)} icon={Banknote} variant={outstanding > 0 ? "warning" : "default"} />
           <SummaryCard title="Forfalt" value={String(overdueCount)} icon={AlertTriangle} variant={overdueCount > 0 ? "overdue" : "default"} />
-          <SummaryCard title="Betalt totalt" value={formatCurrency(paid)} icon={CheckCircle2} variant="success" />
         </div>
 
         {outstanding > 0 && (
@@ -65,6 +79,22 @@ export default function CustomerPortal() {
                     <div className="flex items-center gap-3">
                       <StatusBadge paid={false} dueDate={p.dueDate} />
                       <span className="text-sm font-semibold">{formatCurrency(p.amount)}</span>
+                      {p.paymentRequestStatus === "pending" ? (
+                        <Badge variant="outline" className="gap-1 text-muted-foreground">
+                          <Clock className="h-3 w-3" />
+                          Venter
+                        </Badge>
+                      ) : p.paymentRequestStatus === "rejected" ? (
+                        <Button size="sm" variant="outline" onClick={() => sendPaymentRequest(p.id)}>
+                          <Send className="mr-1.5 h-3.5 w-3.5" />
+                          Send på nytt
+                        </Button>
+                      ) : (
+                        <Button size="sm" variant="outline" onClick={() => sendPaymentRequest(p.id)}>
+                          <Send className="mr-1.5 h-3.5 w-3.5" />
+                          Meld betalt
+                        </Button>
+                      )}
                     </div>
                   </div>
                 ))}
