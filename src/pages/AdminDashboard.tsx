@@ -88,26 +88,37 @@ export default function AdminDashboard() {
             </CardHeader>
             <CardContent className="p-0">
               <div className="divide-y">
-                {pendingRequests.map((p) => (
-                  <div key={p.id} className="flex items-center justify-between px-5 py-3">
-                    <div className="min-w-0 flex-1">
-                      <p className="text-sm font-medium">{p.description}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {getCustomerName(p.customerId)} · {formatDate(p.paymentRequestDate!)}
-                      </p>
+                {pendingRequests.map((p) => {
+                  const reqAmt = p.paymentRequestAmount ?? (p.amount - p.amountPaid);
+                  const pct = Math.round((reqAmt / p.amount) * 100);
+                  const isPartial = reqAmt < (p.amount - p.amountPaid);
+                  return (
+                    <div key={p.id} className="flex items-center justify-between px-5 py-3">
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-medium">{p.description}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {getCustomerName(p.customerId)} · {formatDate(p.paymentRequestDate!)}
+                          {isPartial && ` · Delvis betaling`}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="text-right">
+                          <span className="text-sm font-semibold">{formatCurrency(reqAmt)}</span>
+                          {isPartial && (
+                            <p className="text-xs text-muted-foreground">{pct}% av {formatCurrency(p.amount)}</p>
+                          )}
+                        </div>
+                        <Button size="sm" variant="default" onClick={() => approveRequest(p.id)} className="gap-1">
+                          <Check className="h-3.5 w-3.5" />
+                          Godkjenn
+                        </Button>
+                        <Button size="sm" variant="ghost" onClick={() => rejectRequest(p.id)} className="text-muted-foreground">
+                          <X className="h-3.5 w-3.5" />
+                        </Button>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm font-semibold">{formatCurrency(p.amount)}</span>
-                      <Button size="sm" variant="default" onClick={() => approveRequest(p.id)} className="gap-1">
-                        <Check className="h-3.5 w-3.5" />
-                        Godkjenn
-                      </Button>
-                      <Button size="sm" variant="ghost" onClick={() => rejectRequest(p.id)} className="text-muted-foreground">
-                        <X className="h-3.5 w-3.5" />
-                      </Button>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </CardContent>
           </Card>
