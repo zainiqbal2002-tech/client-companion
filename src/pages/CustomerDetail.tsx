@@ -126,9 +126,10 @@ export default function CustomerDetail() {
                         </p>
                         {p.notes && <p className="text-xs text-muted-foreground mt-1 italic">{p.notes}</p>}
                       </div>
-                      <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-2">
                         <StatusBadge paid={false} dueDate={p.dueDate} />
                         <span className="text-sm font-semibold w-24 text-right">{formatCurrency(p.amount - p.amountPaid)}</span>
+                        <EditPaymentDialog payment={p} onSave={updatePayment} />
                         <PartialPaymentDialog
                           amount={p.amount}
                           amountPaid={p.amountPaid}
