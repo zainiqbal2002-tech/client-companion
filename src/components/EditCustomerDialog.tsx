@@ -14,17 +14,17 @@ interface EditCustomerDialogProps {
 export function EditCustomerDialog({ customer, onSave }: EditCustomerDialogProps) {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState(customer.name);
-  const [email, setEmail] = useState(customer.email);
+  const [email, setEmail] = useState(customer.email ?? "");
   const [phone, setPhone] = useState(customer.phone ?? "");
-  const [monthlyAmount, setMonthlyAmount] = useState(String(customer.monthlyAmount));
+  const [monthlyAmount, setMonthlyAmount] = useState(String(customer.monthlyAmount || ""));
   const [annualAmount, setAnnualAmount] = useState(String(customer.annualAmount ?? ""));
 
   const handleOpen = (o: boolean) => {
     if (o) {
       setName(customer.name);
-      setEmail(customer.email);
+      setEmail(customer.email ?? "");
       setPhone(customer.phone ?? "");
-      setMonthlyAmount(String(customer.monthlyAmount));
+      setMonthlyAmount(String(customer.monthlyAmount || ""));
       setAnnualAmount(String(customer.annualAmount ?? ""));
     }
     setOpen(o);
@@ -34,10 +34,10 @@ export function EditCustomerDialog({ customer, onSave }: EditCustomerDialogProps
     e.preventDefault();
     onSave({
       ...customer,
-      name,
-      email,
+      name: name || "Uten navn",
+      email: email || undefined,
       phone: phone || undefined,
-      monthlyAmount: Number(monthlyAmount),
+      monthlyAmount: monthlyAmount ? Number(monthlyAmount) : 0,
       annualAmount: annualAmount ? Number(annualAmount) : undefined,
     });
     setOpen(false);
@@ -56,12 +56,12 @@ export function EditCustomerDialog({ customer, onSave }: EditCustomerDialogProps
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="editCustName">Bedriftsnavn</Label>
-            <Input id="editCustName" value={name} onChange={(e) => setName(e.target.value)} required />
+            <Label htmlFor="editCustName">Bedriftsnavn (valgfritt)</Label>
+            <Input id="editCustName" value={name} onChange={(e) => setName(e.target.value)} />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="editCustEmail">E-post</Label>
-            <Input id="editCustEmail" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+            <Label htmlFor="editCustEmail">E-post (valgfritt)</Label>
+            <Input id="editCustEmail" type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
           </div>
           <div className="space-y-2">
             <Label htmlFor="editCustPhone">Telefon (valgfritt)</Label>
@@ -69,8 +69,8 @@ export function EditCustomerDialog({ customer, onSave }: EditCustomerDialogProps
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-2">
-              <Label htmlFor="editMonthly">Månedlig beløp (NOK)</Label>
-              <Input id="editMonthly" type="number" value={monthlyAmount} onChange={(e) => setMonthlyAmount(e.target.value)} required min="1" />
+              <Label htmlFor="editMonthly">Månedlig beløp (valgfritt)</Label>
+              <Input id="editMonthly" type="number" value={monthlyAmount} onChange={(e) => setMonthlyAmount(e.target.value)} min="0" />
             </div>
             <div className="space-y-2">
               <Label htmlFor="editAnnual">Årlig tillegg (valgfritt)</Label>

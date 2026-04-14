@@ -78,13 +78,13 @@ export default function CustomerDetail() {
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b bg-card">
-        <div className="mx-auto flex max-w-5xl items-center gap-3 px-4 py-4">
+        <div className="mx-auto flex max-w-5xl items-center gap-3 px-3 sm:px-4 py-3 sm:py-4">
           <Link to="/" className="text-muted-foreground hover:text-foreground">
             <ArrowLeft className="h-5 w-5" />
           </Link>
-          <div className="flex-1">
-            <h1 className="text-xl font-bold">{customer.name}</h1>
-            <div className="flex flex-wrap gap-3 text-sm text-muted-foreground">
+          <div className="flex-1 min-w-0">
+            <h1 className="text-lg sm:text-xl font-bold truncate">{customer.name}</h1>
+            <div className="flex flex-wrap gap-2 sm:gap-3 text-xs sm:text-sm text-muted-foreground">
               {customer.email && (
                 <span className="flex items-center gap-1"><Mail className="h-3.5 w-3.5" />{customer.email}</span>
               )}
@@ -103,16 +103,20 @@ export default function CustomerDetail() {
         </div>
       </header>
 
-      <main className="mx-auto max-w-5xl px-4 py-6 space-y-6">
-        <div className="grid grid-cols-3 gap-3">
+      <main className="mx-auto max-w-5xl px-3 sm:px-4 py-4 sm:py-6 space-y-4 sm:space-y-6">
+        <div className="grid grid-cols-3 gap-2 sm:gap-3">
           <SummaryCard title="Utestående" value={formatCurrency(outstanding)} icon={Banknote} variant="warning" />
           <SummaryCard title="Forfalt" value={String(overdueCount)} icon={AlertTriangle} variant="overdue" />
           <SummaryCard title="Innbetalt" value={formatCurrency(paid)} icon={CheckCircle2} variant="success" />
         </div>
 
-        <div className="flex items-center justify-between text-sm text-muted-foreground">
-          <span>Abonnement: {formatCurrency(customer.monthlyAmount)}/mnd{customer.annualAmount ? ` + ${formatCurrency(customer.annualAmount)}/år` : ""}</span>
-        </div>
+        {(customer.monthlyAmount > 0 || customer.annualAmount) && (
+          <div className="text-xs sm:text-sm text-muted-foreground">
+            Abonnement: {customer.monthlyAmount > 0 ? `${formatCurrency(customer.monthlyAmount)}/mnd` : ""}
+            {customer.monthlyAmount > 0 && customer.annualAmount ? " + " : ""}
+            {customer.annualAmount ? `${formatCurrency(customer.annualAmount)}/år` : ""}
+          </div>
+        )}
 
         <Card>
           <CardHeader className="flex-row items-center justify-between space-y-0 pb-3">
@@ -125,8 +129,8 @@ export default function CustomerDetail() {
             ) : (
               <div className="divide-y">
                 {unpaid.map((p) => (
-                  <div key={p.id} className="px-5 py-3 space-y-2">
-                    <div className="flex items-center justify-between">
+                  <div key={p.id} className="px-3 sm:px-5 py-3 space-y-2">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                       <div className="min-w-0 flex-1">
                         <p className="text-sm font-medium">{p.description}</p>
                         <p className="text-xs text-muted-foreground">
@@ -135,15 +139,15 @@ export default function CustomerDetail() {
                         </p>
                         {p.notes && <p className="text-xs text-muted-foreground mt-1 italic">{p.notes}</p>}
                       </div>
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
                         <StatusBadge paid={false} dueDate={p.dueDate} />
-                        <span className="text-sm font-semibold w-24 text-right">{formatCurrency(p.amount - p.amountPaid)}</span>
+                        <span className="text-sm font-semibold">{formatCurrency(p.amount - p.amountPaid)}</span>
                         <EditPaymentDialog payment={p} onSave={updatePayment} />
                         <PartialPaymentDialog
                           amount={p.amount}
                           amountPaid={p.amountPaid}
                           onConfirm={(amt) => handlePartialPayment(p.id, amt)}
-                          trigger={<Button size="sm" variant="outline">Registrer betaling</Button>}
+                          trigger={<Button size="sm" variant="outline" className="text-xs sm:text-sm">Registrer</Button>}
                         />
                       </div>
                     </div>
@@ -165,15 +169,15 @@ export default function CustomerDetail() {
             ) : (
               <div className="divide-y">
                 {paidItems.map((p) => (
-                  <div key={p.id} className="flex items-center justify-between px-5 py-3 opacity-70">
+                  <div key={p.id} className="flex flex-col sm:flex-row sm:items-center justify-between px-3 sm:px-5 py-3 opacity-70 gap-1">
                     <div className="min-w-0 flex-1">
                       <p className="text-sm font-medium">{p.description}</p>
                       <p className="text-xs text-muted-foreground">Betalt: {p.paidDate ? formatDate(p.paidDate) : "–"}</p>
                     </div>
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2 sm:gap-3">
                       <StatusBadge paid={true} dueDate={p.dueDate} />
-                      <span className="text-sm font-medium w-24 text-right">{formatCurrency(p.amount)}</span>
-                      <Button size="sm" variant="ghost" onClick={() => markAsUnpaid(p.id)} className="text-muted-foreground">
+                      <span className="text-sm font-medium">{formatCurrency(p.amount)}</span>
+                      <Button size="sm" variant="ghost" onClick={() => markAsUnpaid(p.id)} className="text-muted-foreground text-xs">
                         Angre
                       </Button>
                     </div>

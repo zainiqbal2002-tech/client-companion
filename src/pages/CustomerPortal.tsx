@@ -39,27 +39,27 @@ export default function CustomerPortal() {
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b bg-card">
-        <div className="mx-auto flex max-w-5xl items-center gap-3 px-4 py-4">
+        <div className="mx-auto flex max-w-5xl items-center gap-3 px-3 sm:px-4 py-3 sm:py-4">
           <Link to="/" className="text-muted-foreground hover:text-foreground">
             <ArrowLeft className="h-5 w-5" />
           </Link>
           <div>
-            <h1 className="text-xl font-bold">Min oversikt</h1>
-            <p className="text-sm text-muted-foreground">{customer.name}</p>
+            <h1 className="text-lg sm:text-xl font-bold">Min oversikt</h1>
+            <p className="text-xs sm:text-sm text-muted-foreground">{customer.name}</p>
           </div>
         </div>
       </header>
 
-      <main className="mx-auto max-w-5xl px-4 py-6 space-y-6">
-        <div className="grid grid-cols-2 gap-3">
+      <main className="mx-auto max-w-5xl px-3 sm:px-4 py-4 sm:py-6 space-y-4 sm:space-y-6">
+        <div className="grid grid-cols-2 gap-2 sm:gap-3">
           <SummaryCard title="Skyldig" value={formatCurrency(outstanding)} icon={Banknote} variant={outstanding > 0 ? "warning" : "default"} />
           <SummaryCard title="Forfalt" value={String(overdueCount)} icon={AlertTriangle} variant={overdueCount > 0 ? "overdue" : "default"} />
         </div>
 
         {outstanding > 0 && (
-          <div className="rounded-lg border border-overdue/30 bg-overdue/5 p-4 text-center">
-            <p className="text-lg font-bold text-overdue">{formatCurrency(outstanding)}</p>
-            <p className="text-sm text-muted-foreground">Totalt utestående</p>
+          <div className="rounded-lg border border-overdue/30 bg-overdue/5 p-3 sm:p-4 text-center">
+            <p className="text-base sm:text-lg font-bold text-overdue">{formatCurrency(outstanding)}</p>
+            <p className="text-xs sm:text-sm text-muted-foreground">Totalt utestående</p>
           </div>
         )}
 
@@ -73,8 +73,8 @@ export default function CustomerPortal() {
             ) : (
               <div className="divide-y">
                 {unpaid.map((p) => (
-                  <div key={p.id} className="px-5 py-3 space-y-2">
-                    <div className="flex items-center justify-between">
+                  <div key={p.id} className="px-3 sm:px-5 py-3 space-y-2">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                       <div>
                         <p className="text-sm font-medium">{p.description}</p>
                         <p className="text-xs text-muted-foreground">
@@ -83,11 +83,11 @@ export default function CustomerPortal() {
                         </p>
                         {p.notes && <p className="text-xs text-muted-foreground mt-1 italic">{p.notes}</p>}
                       </div>
-                      <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-2 sm:gap-3">
                         <StatusBadge paid={false} dueDate={p.dueDate} />
                         <span className="text-sm font-semibold">{formatCurrency(p.amount - p.amountPaid)}</span>
                         {p.paymentRequestStatus === "pending" ? (
-                          <Badge variant="outline" className="gap-1 text-muted-foreground">
+                          <Badge variant="outline" className="gap-1 text-muted-foreground text-xs">
                             <Clock className="h-3 w-3" />
                             Venter ({formatCurrency(p.paymentRequestAmount ?? 0)})
                           </Badge>
@@ -97,8 +97,8 @@ export default function CustomerPortal() {
                             amountPaid={p.amountPaid}
                             onConfirm={(amt) => sendPaymentRequest(p.id, amt)}
                             trigger={
-                              <Button size="sm" variant="outline">
-                                <Send className="mr-1.5 h-3.5 w-3.5" />
+                              <Button size="sm" variant="outline" className="text-xs sm:text-sm">
+                                <Send className="mr-1 h-3.5 w-3.5" />
                                 Meld betalt
                               </Button>
                             }
@@ -124,12 +124,12 @@ export default function CustomerPortal() {
             ) : (
               <div className="divide-y">
                 {paidItems.map((p) => (
-                  <div key={p.id} className="flex items-center justify-between px-5 py-3 opacity-70">
+                  <div key={p.id} className="flex flex-col sm:flex-row sm:items-center justify-between px-3 sm:px-5 py-3 opacity-70 gap-1">
                     <div>
                       <p className="text-sm font-medium">{p.description}</p>
-                      <p className="text-xs text-muted-foreground">Betalt: {formatDate(p.paidDate!)}</p>
+                      <p className="text-xs text-muted-foreground">Betalt: {p.paidDate ? formatDate(p.paidDate) : "–"}</p>
                     </div>
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2 sm:gap-3">
                       <StatusBadge paid={true} dueDate={p.dueDate} />
                       <span className="text-sm font-medium">{formatCurrency(p.amount)}</span>
                     </div>

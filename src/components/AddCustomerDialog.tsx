@@ -22,10 +22,10 @@ export function AddCustomerDialog({ onAdd }: AddCustomerDialogProps) {
     e.preventDefault();
     onAdd({
       id: `c-${Date.now()}`,
-      name,
-      email,
+      name: name || "Uten navn",
+      email: email || undefined,
       phone: phone || undefined,
-      monthlyAmount: Number(monthlyAmount),
+      monthlyAmount: monthlyAmount ? Number(monthlyAmount) : 0,
       annualAmount: annualAmount ? Number(annualAmount) : undefined,
       createdAt: new Date().toISOString().split("T")[0],
     });
@@ -47,12 +47,12 @@ export function AddCustomerDialog({ onAdd }: AddCustomerDialogProps) {
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="customerName">Bedriftsnavn</Label>
-            <Input id="customerName" value={name} onChange={(e) => setName(e.target.value)} placeholder="F.eks. Oslo Regnskap AS" required />
+            <Label htmlFor="customerName">Bedriftsnavn (valgfritt)</Label>
+            <Input id="customerName" value={name} onChange={(e) => setName(e.target.value)} placeholder="F.eks. Oslo Regnskap AS" />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="customerEmail">E-post</Label>
-            <Input id="customerEmail" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="post@bedrift.no" required />
+            <Label htmlFor="customerEmail">E-post (valgfritt)</Label>
+            <Input id="customerEmail" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="post@bedrift.no" />
           </div>
           <div className="space-y-2">
             <Label htmlFor="customerPhone">Telefon (valgfritt)</Label>
@@ -60,8 +60,8 @@ export function AddCustomerDialog({ onAdd }: AddCustomerDialogProps) {
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-2">
-              <Label htmlFor="monthlyAmt">Månedlig beløp (NOK)</Label>
-              <Input id="monthlyAmt" type="number" value={monthlyAmount} onChange={(e) => setMonthlyAmount(e.target.value)} placeholder="0" required min="1" />
+              <Label htmlFor="monthlyAmt">Månedlig beløp (valgfritt)</Label>
+              <Input id="monthlyAmt" type="number" value={monthlyAmount} onChange={(e) => setMonthlyAmount(e.target.value)} placeholder="0" min="0" />
             </div>
             <div className="space-y-2">
               <Label htmlFor="annualAmt">Årlig tillegg (valgfritt)</Label>
