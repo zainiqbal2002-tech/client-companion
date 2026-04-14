@@ -181,6 +181,23 @@ export default function CustomerDetail() {
                           onConfirm={(amt) => handlePartialPayment(p.id, amt)}
                           trigger={<Button size="sm" variant="outline" className="text-xs sm:text-sm">Registrer</Button>}
                         />
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button size="icon" variant="ghost" className="h-7 w-7 text-muted-foreground hover:text-destructive">
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Slett post</AlertDialogTitle>
+                              <AlertDialogDescription>Er du sikker på at du vil slette «{p.description}»?</AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Avbryt</AlertDialogCancel>
+                              <AlertDialogAction onClick={() => deletePayment(p.id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Slett</AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
                       </div>
                     </div>
                     <PaymentProgress amount={p.amount} amountPaid={p.amountPaid} />
@@ -212,6 +229,23 @@ export default function CustomerDetail() {
                       <Button size="sm" variant="ghost" onClick={() => markAsUnpaid(p.id)} className="text-muted-foreground text-xs">
                         Angre
                       </Button>
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button size="icon" variant="ghost" className="h-7 w-7 text-muted-foreground hover:text-destructive">
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Slett post</AlertDialogTitle>
+                            <AlertDialogDescription>Er du sikker på at du vil slette «{p.description}»?</AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Avbryt</AlertDialogCancel>
+                            <AlertDialogAction onClick={() => deletePayment(p.id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Slett</AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
                     </div>
                   </div>
                 ))}
