@@ -12,8 +12,10 @@ import { EditCustomerDialog } from "@/components/EditCustomerDialog";
 import { mockCustomers, mockPayments } from "@/data/mockData";
 import { formatCurrency, formatDate } from "@/lib/format";
 import { PaymentItem, Customer } from "@/types";
-import { ArrowLeft, Banknote, CheckCircle2, AlertTriangle, Mail, Phone } from "lucide-react";
+import { ArrowLeft, Banknote, CheckCircle2, AlertTriangle, Mail, Phone, Trash2 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import { useNavigate } from "react-router-dom";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 
 export default function CustomerDetail() {
   const { id } = useParams<{ id: string }>();
