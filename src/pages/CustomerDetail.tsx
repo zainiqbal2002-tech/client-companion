@@ -75,6 +75,16 @@ export default function CustomerDetail() {
     toast({ title: "Post oppdatert", description: updated.description });
   };
 
+  const deletePayment = (paymentId: string) => {
+    setPayments((prev) => prev.filter((p) => p.id !== paymentId));
+    toast({ title: "Post slettet", description: "Betalingsposten er fjernet." });
+  };
+
+  const deleteCustomer = () => {
+    toast({ title: "Kunde slettet", description: customer.name });
+    navigate("/");
+  };
+
   const unpaid = payments.filter((p) => !p.paid);
   const paidItems = payments.filter((p) => p.paid);
 
