@@ -66,7 +66,7 @@ export default function AdminDashboard() {
 
   const q = search.toLowerCase();
   const filteredCustomers = q
-    ? customers.filter((c) => c.name.toLowerCase().includes(q) || c.email.toLowerCase().includes(q))
+    ? customers.filter((c) => c.name.toLowerCase().includes(q) || (c.email ?? "").toLowerCase().includes(q))
     : customers;
 
   return (
@@ -74,8 +74,8 @@ export default function AdminDashboard() {
       <header className="border-b bg-card">
         <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-4">
           <div>
-            <h1 className="text-xl font-bold">Kundeoversikt</h1>
-            <p className="text-sm text-muted-foreground">Admin dashboard</p>
+            <h1 className="text-lg sm:text-xl font-bold">Kundeoversikt</h1>
+            <p className="text-xs sm:text-sm text-muted-foreground">Admin dashboard</p>
           </div>
           <Link to="/portal" className="text-sm text-primary hover:underline">
             Kundeportal →
@@ -83,8 +83,8 @@ export default function AdminDashboard() {
         </div>
       </header>
 
-      <main className="mx-auto max-w-5xl px-4 py-6 space-y-6">
-        <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+      <main className="mx-auto max-w-5xl px-3 sm:px-4 py-4 sm:py-6 space-y-4 sm:space-y-6">
+        <div className="grid grid-cols-2 gap-2 sm:gap-3 md:grid-cols-4">
           <SummaryCard title="Kunder" value={String(customers.length)} icon={Users} />
           <SummaryCard title="Utestående" value={formatCurrency(totalOutstanding)} icon={Banknote} variant="warning" />
           <SummaryCard title="Forfalt" value={String(overdueCount)} icon={AlertTriangle} variant="overdue" />
@@ -104,7 +104,7 @@ export default function AdminDashboard() {
                   const pct = Math.round((reqAmt / p.amount) * 100);
                   const isPartial = reqAmt < (p.amount - p.amountPaid);
                   return (
-                    <div key={p.id} className="flex items-center justify-between px-5 py-3">
+                    <div key={p.id} className="flex flex-col sm:flex-row sm:items-center justify-between px-4 sm:px-5 py-3 gap-2">
                       <div className="min-w-0 flex-1">
                         <p className="text-sm font-medium">{p.description}</p>
                         <p className="text-xs text-muted-foreground">
@@ -121,7 +121,7 @@ export default function AdminDashboard() {
                         </div>
                         <Button size="sm" variant="default" onClick={() => approveRequest(p.id)} className="gap-1">
                           <Check className="h-3.5 w-3.5" />
-                          Godkjenn
+                          <span className="hidden sm:inline">Godkjenn</span>
                         </Button>
                         <Button size="sm" variant="ghost" onClick={() => rejectRequest(p.id)} className="text-muted-foreground">
                           <X className="h-3.5 w-3.5" />
@@ -141,7 +141,7 @@ export default function AdminDashboard() {
             <AddCustomerDialog onAdd={addCustomer} />
           </CardHeader>
           <CardContent className="p-0">
-            <div className="px-5 pb-3">
+            <div className="px-4 sm:px-5 pb-3">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
@@ -165,22 +165,22 @@ export default function AdminDashboard() {
                     <Link
                       key={c.id}
                       to={`/admin/customer/${c.id}`}
-                      className="flex items-center justify-between px-5 py-4 hover:bg-secondary/50 transition-colors"
+                      className="flex items-center justify-between px-4 sm:px-5 py-3 sm:py-4 hover:bg-secondary/50 transition-colors"
                     >
                       <div className="min-w-0 flex-1">
                         <p className="font-medium truncate">{c.name}</p>
-                        <p className="text-sm text-muted-foreground">
-                          {formatCurrency(c.monthlyAmount)}/mnd · {paidCount} betalt · {unpaidCount} ubetalt
+                        <p className="text-xs sm:text-sm text-muted-foreground">
+                          {c.monthlyAmount > 0 ? `${formatCurrency(c.monthlyAmount)}/mnd · ` : ""}{paidCount} betalt · {unpaidCount} ubetalt
                         </p>
                       </div>
-                      <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-2 sm:gap-3">
                         {balance > 0 && (
-                          <span className="text-sm font-semibold text-overdue">
+                          <span className="text-xs sm:text-sm font-semibold text-overdue">
                             {formatCurrency(balance)}
                           </span>
                         )}
                         {balance === 0 && (
-                          <span className="text-sm font-medium text-success">À jour</span>
+                          <span className="text-xs sm:text-sm font-medium text-success">À jour</span>
                         )}
                         <ChevronRight className="h-4 w-4 text-muted-foreground" />
                       </div>
