@@ -12,10 +12,13 @@ import { EditCustomerDialog } from "@/components/EditCustomerDialog";
 import { mockCustomers, mockPayments } from "@/data/mockData";
 import { formatCurrency, formatDate } from "@/lib/format";
 import { PaymentItem, Customer } from "@/types";
-import { ArrowLeft, Banknote, CheckCircle2, AlertTriangle, Mail, Phone } from "lucide-react";
+import { ArrowLeft, Banknote, CheckCircle2, AlertTriangle, Mail, Phone, Trash2 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import { useNavigate } from "react-router-dom";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 
 export default function CustomerDetail() {
+  const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const initialCustomer = mockCustomers.find((c) => c.id === id);
   const [customer, setCustomer] = useState<Customer | undefined>(initialCustomer);
@@ -72,6 +75,16 @@ export default function CustomerDetail() {
     toast({ title: "Post oppdatert", description: updated.description });
   };
 
+  const deletePayment = (paymentId: string) => {
+    setPayments((prev) => prev.filter((p) => p.id !== paymentId));
+    toast({ title: "Post slettet", description: "Betalingsposten er fjernet." });
+  };
+
+  const deleteCustomer = () => {
+    toast({ title: "Kunde slettet", description: customer.name });
+    navigate("/");
+  };
+
   const unpaid = payments.filter((p) => !p.paid);
   const paidItems = payments.filter((p) => p.paid);
 
@@ -100,6 +113,25 @@ export default function CustomerDetail() {
               toast({ title: "Kunde oppdatert", description: updated.name });
             }}
           />
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button size="icon" variant="ghost" className="h-8 w-8 text-muted-foreground hover:text-destructive">
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Slett kunde</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Er du sikker på at du vil slette {customer.name}? Dette kan ikke angres.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Avbryt</AlertDialogCancel>
+                <AlertDialogAction onClick={deleteCustomer} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Slett</AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </div>
       </header>
 
@@ -149,6 +181,23 @@ export default function CustomerDetail() {
                           onConfirm={(amt) => handlePartialPayment(p.id, amt)}
                           trigger={<Button size="sm" variant="outline" className="text-xs sm:text-sm">Registrer</Button>}
                         />
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button size="icon" variant="ghost" className="h-7 w-7 text-muted-foreground hover:text-destructive">
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Slett post</AlertDialogTitle>
+                              <AlertDialogDescription>Er du sikker på at du vil slette «{p.description}»?</AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Avbryt</AlertDialogCancel>
+                              <AlertDialogAction onClick={() => deletePayment(p.id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Slett</AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
                       </div>
                     </div>
                     <PaymentProgress amount={p.amount} amountPaid={p.amountPaid} />
@@ -180,6 +229,23 @@ export default function CustomerDetail() {
                       <Button size="sm" variant="ghost" onClick={() => markAsUnpaid(p.id)} className="text-muted-foreground text-xs">
                         Angre
                       </Button>
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button size="icon" variant="ghost" className="h-7 w-7 text-muted-foreground hover:text-destructive">
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Slett post</AlertDialogTitle>
+                            <AlertDialogDescription>Er du sikker på at du vil slette «{p.description}»?</AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Avbryt</AlertDialogCancel>
+                            <AlertDialogAction onClick={() => deletePayment(p.id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Slett</AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
                     </div>
                   </div>
                 ))}

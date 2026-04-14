@@ -8,7 +8,8 @@ import { AddCustomerDialog } from "@/components/AddCustomerDialog";
 import { mockCustomers, mockPayments } from "@/data/mockData";
 import { formatCurrency, formatDate } from "@/lib/format";
 import { PaymentItem, Customer } from "@/types";
-import { Users, Banknote, AlertTriangle, CheckCircle2, ChevronRight, Inbox, Check, X, Search } from "lucide-react";
+import { Users, Banknote, AlertTriangle, CheckCircle2, ChevronRight, Inbox, Check, X, Search, Trash2 } from "lucide-react";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { toast } from "@/hooks/use-toast";
 
 export default function AdminDashboard() {
@@ -62,6 +63,13 @@ export default function AdminDashboard() {
   const addCustomer = (customer: Customer) => {
     setCustomers((prev) => [...prev, customer]);
     toast({ title: "Kunde opprettet", description: customer.name });
+  };
+
+  const deleteCustomer = (customerId: string) => {
+    const name = customers.find((c) => c.id === customerId)?.name;
+    setCustomers((prev) => prev.filter((c) => c.id !== customerId));
+    setPayments((prev) => prev.filter((p) => p.customerId !== customerId));
+    toast({ title: "Kunde slettet", description: name ?? "Slettet" });
   };
 
   const q = search.toLowerCase();
@@ -162,17 +170,16 @@ export default function AdminDashboard() {
                   const unpaidCount = payments.filter((p) => p.customerId === c.id && !p.paid).length;
 
                   return (
-                    <Link
+                    <div
                       key={c.id}
-                      to={`/admin/customer/${c.id}`}
                       className="flex items-center justify-between px-4 sm:px-5 py-3 sm:py-4 hover:bg-secondary/50 transition-colors"
                     >
-                      <div className="min-w-0 flex-1">
+                      <Link to={`/admin/customer/${c.id}`} className="min-w-0 flex-1">
                         <p className="font-medium truncate">{c.name}</p>
                         <p className="text-xs sm:text-sm text-muted-foreground">
                           {c.monthlyAmount > 0 ? `${formatCurrency(c.monthlyAmount)}/mnd · ` : ""}{paidCount} betalt · {unpaidCount} ubetalt
                         </p>
-                      </div>
+                      </Link>
                       <div className="flex items-center gap-2 sm:gap-3">
                         {balance > 0 && (
                           <span className="text-xs sm:text-sm font-semibold text-overdue">
@@ -182,9 +189,30 @@ export default function AdminDashboard() {
                         {balance === 0 && (
                           <span className="text-xs sm:text-sm font-medium text-success">À jour</span>
                         )}
-                        <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button size="icon" variant="ghost" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={(e) => e.stopPropagation()}>
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Slett kunde</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Er du sikker på at du vil slette {c.name}? Alle tilhørende betalingsposter slettes også. Dette kan ikke angres.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Avbryt</AlertDialogCancel>
+                              <AlertDialogAction onClick={() => deleteCustomer(c.id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Slett</AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                        <Link to={`/admin/customer/${c.id}`}>
+                          <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                        </Link>
                       </div>
-                    </Link>
+                    </div>
                   );
                 })
               )}
