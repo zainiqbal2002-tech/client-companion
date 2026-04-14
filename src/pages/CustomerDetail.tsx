@@ -18,6 +18,7 @@ import { useNavigate } from "react-router-dom";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 
 export default function CustomerDetail() {
+  const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const initialCustomer = mockCustomers.find((c) => c.id === id);
   const [customer, setCustomer] = useState<Customer | undefined>(initialCustomer);
