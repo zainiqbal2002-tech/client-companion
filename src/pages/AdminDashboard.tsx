@@ -16,11 +16,20 @@ export default function AdminDashboard() {
   const [payments, setPayments] = useState<PaymentItem[]>(mockPayments);
   const [customers, setCustomers] = useState<Customer[]>(mockCustomers);
   const [search, setSearch] = useState("");
+  const [paidPeriod, setPaidPeriod] = useState<"yearly" | "monthly">("yearly");
 
   const totalOutstanding = payments.filter((p) => !p.paid).reduce((s, p) => s + (p.amount - p.amountPaid), 0);
-  const totalPaid = payments.reduce((s, p) => s + p.amountPaid, 0);
+  const totalPaidAll = payments.reduce((s, p) => s + p.amountPaid, 0);
   const overdueCount = payments.filter((p) => !p.paid && new Date(p.dueDate) < new Date()).length;
 
+  const now = new Date();
+  const totalPaidMonthly = payments
+    .filter((p) => p.paidDate && new Date(p.paidDate).getMonth() === now.getMonth() && new Date(p.paidDate).getFullYear() === now.getFullYear())
+    .reduce((s, p) => s + p.amountPaid, 0);
+  const totalPaidYearly = payments
+    .filter((p) => p.paidDate && new Date(p.paidDate).getFullYear() === now.getFullYear())
+    .reduce((s, p) => s + p.amountPaid, 0);
+  const totalPaidDisplay = paidPeriod === "yearly" ? totalPaidYearly : totalPaidMonthly;
   const pendingRequests = payments.filter((p) => p.paymentRequestStatus === "pending");
 
   const getCustomerBalance = (id: string) =>
