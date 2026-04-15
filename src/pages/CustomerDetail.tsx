@@ -85,6 +85,16 @@ export default function CustomerDetail() {
     navigate("/");
   };
 
+  const getSmsLink = (payment: PaymentItem) => {
+    if (!customer.phone) return null;
+    const remaining = formatCurrency(payment.amount - payment.amountPaid);
+    const due = formatDate(payment.dueDate);
+    const text = `Hei! Dette er en påminnelse om ubetalt faktura: "${payment.description}" på ${remaining} med forfall ${due}. Vennligst betal så snart som mulig. Mvh ${customer.name ? "din leverandør" : ""}`;
+    const phone = customer.phone.replace(/\s/g, "");
+    return `sms:${phone}?body=${encodeURIComponent(text)}`;
+  };
+  };
+
   const unpaid = payments.filter((p) => !p.paid);
   const paidItems = payments.filter((p) => p.paid);
 
