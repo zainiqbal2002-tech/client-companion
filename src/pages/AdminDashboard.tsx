@@ -105,7 +105,33 @@ export default function AdminDashboard() {
           <SummaryCard title="Kunder" value={String(customers.length)} icon={Users} />
           <SummaryCard title="Utestående" value={formatCurrency(totalOutstanding)} icon={Banknote} variant="warning" />
           <SummaryCard title="Forfalt" value={String(overdueCount)} icon={AlertTriangle} variant="overdue" />
-          <SummaryCard title="Innbetalt" value={formatCurrency(totalPaid)} icon={CheckCircle2} variant="success" />
+          <Card>
+            <CardContent className="flex items-center gap-4 p-5">
+              <div className="rounded-xl p-3 bg-secondary text-success">
+                <CheckCircle2 className="h-5 w-5" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-1.5">
+                  <p className="text-sm text-muted-foreground">Innbetalt</p>
+                  <div className="flex rounded-md overflow-hidden border border-border text-[10px] leading-none">
+                    <button
+                      onClick={() => setPaidPeriod("monthly")}
+                      className={`px-1.5 py-0.5 transition-colors ${paidPeriod === "monthly" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-secondary"}`}
+                    >
+                      Mnd
+                    </button>
+                    <button
+                      onClick={() => setPaidPeriod("yearly")}
+                      className={`px-1.5 py-0.5 transition-colors ${paidPeriod === "yearly" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-secondary"}`}
+                    >
+                      År
+                    </button>
+                  </div>
+                </div>
+                <p className="text-xl font-bold tracking-tight">{formatCurrency(totalPaidDisplay)}</p>
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
         {pendingRequests.length > 0 && (
