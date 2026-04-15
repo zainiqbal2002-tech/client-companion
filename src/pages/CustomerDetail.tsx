@@ -12,7 +12,7 @@ import { EditCustomerDialog } from "@/components/EditCustomerDialog";
 import { mockCustomers, mockPayments } from "@/data/mockData";
 import { formatCurrency, formatDate } from "@/lib/format";
 import { PaymentItem, Customer } from "@/types";
-import { ArrowLeft, Banknote, CheckCircle2, AlertTriangle, Mail, Phone, Trash2 } from "lucide-react";
+import { ArrowLeft, Banknote, CheckCircle2, AlertTriangle, Mail, Phone, Trash2, MessageSquare } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
@@ -83,6 +83,15 @@ export default function CustomerDetail() {
   const deleteCustomer = () => {
     toast({ title: "Kunde slettet", description: customer.name });
     navigate("/");
+  };
+
+  const getSmsLink = (payment: PaymentItem) => {
+    if (!customer.phone) return null;
+    const remaining = formatCurrency(payment.amount - payment.amountPaid);
+    const due = formatDate(payment.dueDate);
+    const text = `Hei! Dette er en påminnelse om ubetalt faktura: "${payment.description}" på ${remaining} med forfall ${due}. Vennligst betal så snart som mulig. Mvh ${customer.name ? "din leverandør" : ""}`;
+    const phone = customer.phone.replace(/\s/g, "");
+    return `sms:${phone}?body=${encodeURIComponent(text)}`;
   };
 
   const unpaid = payments.filter((p) => !p.paid);
@@ -181,6 +190,13 @@ export default function CustomerDetail() {
                           onConfirm={(amt) => handlePartialPayment(p.id, amt)}
                           trigger={<Button size="sm" variant="outline" className="text-xs sm:text-sm">Registrer</Button>}
                         />
+                        {getSmsLink(p) && (
+                          <Button size="icon" variant="ghost" className="h-7 w-7 text-muted-foreground hover:text-primary" asChild>
+                            <a href={getSmsLink(p)!} title="Send SMS-påminnelse">
+                              <MessageSquare className="h-3.5 w-3.5" />
+                            </a>
+                          </Button>
+                        )}
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
                             <Button size="icon" variant="ghost" className="h-7 w-7 text-muted-foreground hover:text-destructive">
