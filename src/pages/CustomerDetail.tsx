@@ -190,6 +190,13 @@ export default function CustomerDetail() {
                           onConfirm={(amt) => handlePartialPayment(p.id, amt)}
                           trigger={<Button size="sm" variant="outline" className="text-xs sm:text-sm">Registrer</Button>}
                         />
+                        {getSmsLink(p) && (
+                          <Button size="icon" variant="ghost" className="h-7 w-7 text-muted-foreground hover:text-primary" asChild>
+                            <a href={getSmsLink(p)!} title="Send SMS-påminnelse">
+                              <MessageSquare className="h-3.5 w-3.5" />
+                            </a>
+                          </Button>
+                        )}
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
                             <Button size="icon" variant="ghost" className="h-7 w-7 text-muted-foreground hover:text-destructive">
