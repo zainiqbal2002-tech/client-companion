@@ -9,10 +9,14 @@ import { Customer } from "@/types";
 interface EditCustomerDialogProps {
   customer: Customer;
   onSave: (updated: Customer) => void;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
-export function EditCustomerDialog({ customer, onSave }: EditCustomerDialogProps) {
-  const [open, setOpen] = useState(false);
+export function EditCustomerDialog({ customer, onSave, open: controlledOpen, onOpenChange }: EditCustomerDialogProps) {
+  const [internalOpen, setInternalOpen] = useState(false);
+  const open = controlledOpen ?? internalOpen;
+  const setOpen = onOpenChange ?? setInternalOpen;
   const [name, setName] = useState(customer.name);
   const [email, setEmail] = useState(customer.email ?? "");
   const [phone, setPhone] = useState(customer.phone ?? "");
@@ -45,11 +49,6 @@ export function EditCustomerDialog({ customer, onSave }: EditCustomerDialogProps
 
   return (
     <Dialog open={open} onOpenChange={handleOpen}>
-      <DialogTrigger asChild>
-        <Button size="icon" variant="ghost" className="h-8 w-8 text-muted-foreground">
-          <Pencil className="h-4 w-4" />
-        </Button>
-      </DialogTrigger>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Rediger kunde</DialogTitle>

@@ -11,10 +11,14 @@ import { PaymentItem } from "@/types";
 interface EditPaymentDialogProps {
   payment: PaymentItem;
   onSave: (updated: PaymentItem) => void;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
-export function EditPaymentDialog({ payment, onSave }: EditPaymentDialogProps) {
-  const [open, setOpen] = useState(false);
+export function EditPaymentDialog({ payment, onSave, open: controlledOpen, onOpenChange }: EditPaymentDialogProps) {
+  const [internalOpen, setInternalOpen] = useState(false);
+  const open = controlledOpen ?? internalOpen;
+  const setOpen = onOpenChange ?? setInternalOpen;
   const [description, setDescription] = useState(payment.description);
   const [notes, setNotes] = useState(payment.notes ?? "");
   const [amount, setAmount] = useState(String(payment.amount));
@@ -53,11 +57,6 @@ export function EditPaymentDialog({ payment, onSave }: EditPaymentDialogProps) {
 
   return (
     <Dialog open={open} onOpenChange={handleOpen}>
-      <DialogTrigger asChild>
-        <Button size="icon" variant="ghost" className="h-8 w-8 text-muted-foreground">
-          <Pencil className="h-3.5 w-3.5" />
-        </Button>
-      </DialogTrigger>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Rediger post</DialogTitle>

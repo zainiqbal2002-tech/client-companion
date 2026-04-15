@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { SummaryCard } from "@/components/SummaryCard";
@@ -12,10 +12,10 @@ import { EditCustomerDialog } from "@/components/EditCustomerDialog";
 import { mockCustomers, mockPayments } from "@/data/mockData";
 import { formatCurrency, formatDate } from "@/lib/format";
 import { PaymentItem, Customer } from "@/types";
-import { ArrowLeft, Banknote, CheckCircle2, AlertTriangle, Mail, Phone, Trash2, MessageSquare } from "lucide-react";
+import { ArrowLeft, Banknote, CheckCircle2, AlertTriangle, Mail, Phone, MoreVertical, Pencil, Trash2, MessageSquare, Undo2 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
-import { useNavigate } from "react-router-dom";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
 export default function CustomerDetail() {
   const navigate = useNavigate();
@@ -25,6 +25,10 @@ export default function CustomerDetail() {
   const [payments, setPayments] = useState<PaymentItem[]>(
     mockPayments.filter((p) => p.customerId === id)
   );
+  const [editCustomerOpen, setEditCustomerOpen] = useState(false);
+  const [deleteCustomerOpen, setDeleteCustomerOpen] = useState(false);
+  const [editPaymentId, setEditPaymentId] = useState<string | null>(null);
+  const [deletePaymentId, setDeletePaymentId] = useState<string | null>(null);
 
   if (!customer) {
     return (
@@ -96,6 +100,8 @@ export default function CustomerDetail() {
 
   const unpaid = payments.filter((p) => !p.paid);
   const paidItems = payments.filter((p) => p.paid);
+  const paymentToDelete = payments.find((p) => p.id === deletePaymentId);
+  const paymentToEdit = payments.find((p) => p.id === editPaymentId);
 
   return (
     <div className="min-h-screen bg-background">
@@ -115,34 +121,88 @@ export default function CustomerDetail() {
               )}
             </div>
           </div>
-          <EditCustomerDialog
-            customer={customer}
-            onSave={(updated) => {
-              setCustomer(updated);
-              toast({ title: "Kunde oppdatert", description: updated.name });
-            }}
-          />
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <Button size="icon" variant="ghost" className="h-8 w-8 text-muted-foreground hover:text-destructive">
-                <Trash2 className="h-4 w-4" />
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button size="icon" variant="ghost" className="h-8 w-8 text-muted-foreground">
+                <MoreVertical className="h-4 w-4" />
               </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Slett kunde</AlertDialogTitle>
-                <AlertDialogDescription>
-                  Er du sikker på at du vil slette {customer.name}? Dette kan ikke angres.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Avbryt</AlertDialogCancel>
-                <AlertDialogAction onClick={deleteCustomer} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Slett</AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => setEditCustomerOpen(true)}>
+                <Pencil className="h-4 w-4 mr-2" />
+                Rediger kunde
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => setDeleteCustomerOpen(true)} className="text-destructive focus:text-destructive">
+                <Trash2 className="h-4 w-4 mr-2" />
+                Slett kunde
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </header>
+
+      {/* Edit Customer Dialog */}
+      <EditCustomerDialog
+        customer={customer}
+        open={editCustomerOpen}
+        onOpenChange={setEditCustomerOpen}
+        onSave={(updated) => {
+          setCustomer(updated);
+          toast({ title: "Kunde oppdatert", description: updated.name });
+        }}
+      />
+
+      {/* Delete Customer Dialog */}
+      <AlertDialog open={deleteCustomerOpen} onOpenChange={setDeleteCustomerOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Slett kunde</AlertDialogTitle>
+            <AlertDialogDescription>
+              Er du sikker på at du vil slette {customer.name}? Dette kan ikke angres.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Avbryt</AlertDialogCancel>
+            <AlertDialogAction onClick={deleteCustomer} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Slett</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Edit Payment Dialog */}
+      {paymentToEdit && (
+        <EditPaymentDialog
+          payment={paymentToEdit}
+          open={!!editPaymentId}
+          onOpenChange={(o) => { if (!o) setEditPaymentId(null); }}
+          onSave={(updated) => {
+            updatePayment(updated);
+            setEditPaymentId(null);
+          }}
+        />
+      )}
+
+      {/* Delete Payment Dialog */}
+      <AlertDialog open={!!deletePaymentId} onOpenChange={(o) => { if (!o) setDeletePaymentId(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Slett post</AlertDialogTitle>
+            <AlertDialogDescription>Er du sikker på at du vil slette «{paymentToDelete?.description}»?</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Avbryt</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (deletePaymentId) deletePayment(deletePaymentId);
+                setDeletePaymentId(null);
+              }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Slett
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <main className="mx-auto max-w-5xl px-3 sm:px-4 py-4 sm:py-6 space-y-4 sm:space-y-6">
         <div className="grid grid-cols-3 gap-2 sm:gap-3">
@@ -183,37 +243,38 @@ export default function CustomerDetail() {
                       <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
                         <StatusBadge paid={false} dueDate={p.dueDate} />
                         <span className="text-sm font-semibold">{formatCurrency(p.amount - p.amountPaid)}</span>
-                        <EditPaymentDialog payment={p} onSave={updatePayment} />
                         <PartialPaymentDialog
                           amount={p.amount}
                           amountPaid={p.amountPaid}
                           onConfirm={(amt) => handlePartialPayment(p.id, amt)}
                           trigger={<Button size="sm" variant="outline" className="text-xs sm:text-sm">Registrer</Button>}
                         />
-                        {getSmsLink(p) && (
-                          <Button size="icon" variant="ghost" className="h-7 w-7 text-muted-foreground hover:text-primary" asChild>
-                            <a href={getSmsLink(p)!} title="Send SMS-påminnelse">
-                              <MessageSquare className="h-3.5 w-3.5" />
-                            </a>
-                          </Button>
-                        )}
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <Button size="icon" variant="ghost" className="h-7 w-7 text-muted-foreground hover:text-destructive">
-                              <Trash2 className="h-3.5 w-3.5" />
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button size="icon" variant="ghost" className="h-7 w-7 text-muted-foreground">
+                              <MoreVertical className="h-3.5 w-3.5" />
                             </Button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>Slett post</AlertDialogTitle>
-                              <AlertDialogDescription>Er du sikker på at du vil slette «{p.description}»?</AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>Avbryt</AlertDialogCancel>
-                              <AlertDialogAction onClick={() => deletePayment(p.id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Slett</AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => setEditPaymentId(p.id)}>
+                              <Pencil className="h-4 w-4 mr-2" />
+                              Rediger
+                            </DropdownMenuItem>
+                            {getSmsLink(p) && (
+                              <DropdownMenuItem asChild>
+                                <a href={getSmsLink(p)!}>
+                                  <MessageSquare className="h-4 w-4 mr-2" />
+                                  Send SMS-påminnelse
+                                </a>
+                              </DropdownMenuItem>
+                            )}
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem onClick={() => setDeletePaymentId(p.id)} className="text-destructive focus:text-destructive">
+                              <Trash2 className="h-4 w-4 mr-2" />
+                              Slett
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </div>
                     </div>
                     <PaymentProgress amount={p.amount} amountPaid={p.amountPaid} />
@@ -242,26 +303,24 @@ export default function CustomerDetail() {
                     <div className="flex items-center gap-2 sm:gap-3">
                       <StatusBadge paid={true} dueDate={p.dueDate} />
                       <span className="text-sm font-medium">{formatCurrency(p.amount)}</span>
-                      <Button size="sm" variant="ghost" onClick={() => markAsUnpaid(p.id)} className="text-muted-foreground text-xs">
-                        Angre
-                      </Button>
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <Button size="icon" variant="ghost" className="h-7 w-7 text-muted-foreground hover:text-destructive">
-                            <Trash2 className="h-3.5 w-3.5" />
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button size="icon" variant="ghost" className="h-7 w-7 text-muted-foreground">
+                            <MoreVertical className="h-3.5 w-3.5" />
                           </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>Slett post</AlertDialogTitle>
-                            <AlertDialogDescription>Er du sikker på at du vil slette «{p.description}»?</AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>Avbryt</AlertDialogCancel>
-                            <AlertDialogAction onClick={() => deletePayment(p.id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Slett</AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => markAsUnpaid(p.id)}>
+                            <Undo2 className="h-4 w-4 mr-2" />
+                            Angre betaling
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem onClick={() => setDeletePaymentId(p.id)} className="text-destructive focus:text-destructive">
+                            <Trash2 className="h-4 w-4 mr-2" />
+                            Slett
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </div>
                   </div>
                 ))}
