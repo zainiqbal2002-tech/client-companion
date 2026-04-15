@@ -16,11 +16,20 @@ export default function AdminDashboard() {
   const [payments, setPayments] = useState<PaymentItem[]>(mockPayments);
   const [customers, setCustomers] = useState<Customer[]>(mockCustomers);
   const [search, setSearch] = useState("");
+  const [paidPeriod, setPaidPeriod] = useState<"yearly" | "monthly">("yearly");
 
   const totalOutstanding = payments.filter((p) => !p.paid).reduce((s, p) => s + (p.amount - p.amountPaid), 0);
-  const totalPaid = payments.reduce((s, p) => s + p.amountPaid, 0);
+  const totalPaidAll = payments.reduce((s, p) => s + p.amountPaid, 0);
   const overdueCount = payments.filter((p) => !p.paid && new Date(p.dueDate) < new Date()).length;
 
+  const now = new Date();
+  const totalPaidMonthly = payments
+    .filter((p) => p.paidDate && new Date(p.paidDate).getMonth() === now.getMonth() && new Date(p.paidDate).getFullYear() === now.getFullYear())
+    .reduce((s, p) => s + p.amountPaid, 0);
+  const totalPaidYearly = payments
+    .filter((p) => p.paidDate && new Date(p.paidDate).getFullYear() === now.getFullYear())
+    .reduce((s, p) => s + p.amountPaid, 0);
+  const totalPaidDisplay = paidPeriod === "yearly" ? totalPaidYearly : totalPaidMonthly;
   const pendingRequests = payments.filter((p) => p.paymentRequestStatus === "pending");
 
   const getCustomerBalance = (id: string) =>
@@ -96,7 +105,33 @@ export default function AdminDashboard() {
           <SummaryCard title="Kunder" value={String(customers.length)} icon={Users} />
           <SummaryCard title="Utestående" value={formatCurrency(totalOutstanding)} icon={Banknote} variant="warning" />
           <SummaryCard title="Forfalt" value={String(overdueCount)} icon={AlertTriangle} variant="overdue" />
-          <SummaryCard title="Innbetalt" value={formatCurrency(totalPaid)} icon={CheckCircle2} variant="success" />
+          <Card>
+            <CardContent className="flex items-center gap-4 p-5">
+              <div className="rounded-xl p-3 bg-secondary text-success">
+                <CheckCircle2 className="h-5 w-5" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-1.5">
+                  <p className="text-sm text-muted-foreground">Innbetalt</p>
+                  <div className="flex rounded-md overflow-hidden border border-border text-[10px] leading-none">
+                    <button
+                      onClick={() => setPaidPeriod("monthly")}
+                      className={`px-1.5 py-0.5 transition-colors ${paidPeriod === "monthly" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-secondary"}`}
+                    >
+                      Mnd
+                    </button>
+                    <button
+                      onClick={() => setPaidPeriod("yearly")}
+                      className={`px-1.5 py-0.5 transition-colors ${paidPeriod === "yearly" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-secondary"}`}
+                    >
+                      År
+                    </button>
+                  </div>
+                </div>
+                <p className="text-xl font-bold tracking-tight">{formatCurrency(totalPaidDisplay)}</p>
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
         {pendingRequests.length > 0 && (
