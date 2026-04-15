@@ -49,11 +49,6 @@ export function EditCustomerDialog({ customer, onSave, open: controlledOpen, onO
 
   return (
     <Dialog open={open} onOpenChange={handleOpen}>
-      <DialogTrigger asChild>
-        <Button size="icon" variant="ghost" className="h-8 w-8 text-muted-foreground">
-          <Pencil className="h-4 w-4" />
-        </Button>
-      </DialogTrigger>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Rediger kunde</DialogTitle>
