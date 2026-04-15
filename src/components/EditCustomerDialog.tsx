@@ -9,10 +9,14 @@ import { Customer } from "@/types";
 interface EditCustomerDialogProps {
   customer: Customer;
   onSave: (updated: Customer) => void;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
-export function EditCustomerDialog({ customer, onSave }: EditCustomerDialogProps) {
-  const [open, setOpen] = useState(false);
+export function EditCustomerDialog({ customer, onSave, open: controlledOpen, onOpenChange }: EditCustomerDialogProps) {
+  const [internalOpen, setInternalOpen] = useState(false);
+  const open = controlledOpen ?? internalOpen;
+  const setOpen = onOpenChange ?? setInternalOpen;
   const [name, setName] = useState(customer.name);
   const [email, setEmail] = useState(customer.email ?? "");
   const [phone, setPhone] = useState(customer.phone ?? "");
