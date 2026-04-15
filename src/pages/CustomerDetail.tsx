@@ -93,7 +93,6 @@ export default function CustomerDetail() {
     const phone = customer.phone.replace(/\s/g, "");
     return `sms:${phone}?body=${encodeURIComponent(text)}`;
   };
-  };
 
   const unpaid = payments.filter((p) => !p.paid);
   const paidItems = payments.filter((p) => p.paid);
