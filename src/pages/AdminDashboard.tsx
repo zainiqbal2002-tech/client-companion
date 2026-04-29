@@ -119,7 +119,7 @@ export default function AdminDashboard() {
                 <CheckCircle2 className="h-5 w-5" />
               </div>
               <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
                   <p className="text-sm text-muted-foreground">Innbetalt</p>
                   <div className="flex rounded-md overflow-hidden border border-border text-xs font-medium leading-none">
                     <button
@@ -137,6 +137,32 @@ export default function AdminDashboard() {
                   </div>
                 </div>
                 <p className="text-xl font-bold tracking-tight">{formatCurrency(totalPaidDisplay)}</p>
+                <Popover open={datePickerOpen} onOpenChange={setDatePickerOpen}>
+                  <PopoverTrigger asChild>
+                    <button
+                      className={cn(
+                        "mt-1 inline-flex items-center gap-1 rounded-md border border-border px-2 py-0.5 text-[11px] font-medium text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
+                      )}
+                    >
+                      <CalendarIcon className="h-3 w-3" />
+                      {periodLabel}
+                    </button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={paidDate}
+                      onSelect={(d) => {
+                        if (d) {
+                          setPaidDate(d);
+                          setDatePickerOpen(false);
+                        }
+                      }}
+                      initialFocus
+                      className={cn("p-3 pointer-events-auto")}
+                    />
+                  </PopoverContent>
+                </Popover>
               </div>
             </CardContent>
           </Card>
