@@ -8,8 +8,11 @@ import { AddCustomerDialog } from "@/components/AddCustomerDialog";
 import { mockCustomers, mockPayments } from "@/data/mockData";
 import { formatCurrency, formatDate } from "@/lib/format";
 import { PaymentItem, Customer } from "@/types";
-import { Users, Banknote, AlertTriangle, CheckCircle2, ChevronRight, Inbox, Check, X, Search, Trash2 } from "lucide-react";
+import { Users, Banknote, AlertTriangle, CheckCircle2, ChevronRight, Inbox, Check, X, Search, Trash2, CalendarIcon } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { cn } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
 
 export default function AdminDashboard() {
@@ -17,19 +20,24 @@ export default function AdminDashboard() {
   const [customers, setCustomers] = useState<Customer[]>(mockCustomers);
   const [search, setSearch] = useState("");
   const [paidPeriod, setPaidPeriod] = useState<"yearly" | "monthly">("yearly");
+  const [paidDate, setPaidDate] = useState<Date>(new Date());
+  const [datePickerOpen, setDatePickerOpen] = useState(false);
 
   const totalOutstanding = payments.filter((p) => !p.paid).reduce((s, p) => s + (p.amount - p.amountPaid), 0);
   const totalPaidAll = payments.reduce((s, p) => s + p.amountPaid, 0);
   const overdueCount = payments.filter((p) => !p.paid && new Date(p.dueDate) < new Date()).length;
 
-  const now = new Date();
+  const selectedMonth = paidDate.getMonth();
+  const selectedYear = paidDate.getFullYear();
   const totalPaidMonthly = payments
-    .filter((p) => p.paidDate && new Date(p.paidDate).getMonth() === now.getMonth() && new Date(p.paidDate).getFullYear() === now.getFullYear())
+    .filter((p) => p.paidDate && new Date(p.paidDate).getMonth() === selectedMonth && new Date(p.paidDate).getFullYear() === selectedYear)
     .reduce((s, p) => s + p.amountPaid, 0);
   const totalPaidYearly = payments
-    .filter((p) => p.paidDate && new Date(p.paidDate).getFullYear() === now.getFullYear())
+    .filter((p) => p.paidDate && new Date(p.paidDate).getFullYear() === selectedYear)
     .reduce((s, p) => s + p.amountPaid, 0);
   const totalPaidDisplay = paidPeriod === "yearly" ? totalPaidYearly : totalPaidMonthly;
+  const monthNames = ["Jan", "Feb", "Mar", "Apr", "Mai", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Des"];
+  const periodLabel = paidPeriod === "yearly" ? String(selectedYear) : `${monthNames[selectedMonth]} ${selectedYear}`;
   const pendingRequests = payments.filter((p) => p.paymentRequestStatus === "pending");
 
   const getCustomerBalance = (id: string) =>
@@ -111,7 +119,7 @@ export default function AdminDashboard() {
                 <CheckCircle2 className="h-5 w-5" />
               </div>
               <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
                   <p className="text-sm text-muted-foreground">Innbetalt</p>
                   <div className="flex rounded-md overflow-hidden border border-border text-xs font-medium leading-none">
                     <button
@@ -129,6 +137,32 @@ export default function AdminDashboard() {
                   </div>
                 </div>
                 <p className="text-xl font-bold tracking-tight">{formatCurrency(totalPaidDisplay)}</p>
+                <Popover open={datePickerOpen} onOpenChange={setDatePickerOpen}>
+                  <PopoverTrigger asChild>
+                    <button
+                      className={cn(
+                        "mt-1 inline-flex items-center gap-1 rounded-md border border-border px-2 py-0.5 text-[11px] font-medium text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
+                      )}
+                    >
+                      <CalendarIcon className="h-3 w-3" />
+                      {periodLabel}
+                    </button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={paidDate}
+                      onSelect={(d) => {
+                        if (d) {
+                          setPaidDate(d);
+                          setDatePickerOpen(false);
+                        }
+                      }}
+                      initialFocus
+                      className={cn("p-3 pointer-events-auto")}
+                    />
+                  </PopoverContent>
+                </Popover>
               </div>
             </CardContent>
           </Card>
