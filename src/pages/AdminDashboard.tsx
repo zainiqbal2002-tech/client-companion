@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -12,11 +12,22 @@ import { Users, Banknote, AlertTriangle, CheckCircle2, ChevronRight, Inbox, Chec
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "@/hooks/use-toast";
+import { generateAllDueMonthlyPayments } from "@/lib/generateMonthlyPayments";
 
 export default function AdminDashboard() {
   const [payments, setPayments] = useState<PaymentItem[]>(mockPayments);
   const [customers, setCustomers] = useState<Customer[]>(mockCustomers);
   const [search, setSearch] = useState("");
+
+  // Auto-generate monthly subscription items for every customer up to current month.
+  useEffect(() => {
+    setPayments((prev) => {
+      const newItems = generateAllDueMonthlyPayments(customers, prev);
+      if (newItems.length === 0) return prev;
+      return [...prev, ...newItems];
+    });
+  }, [customers]);
+
   const now = new Date();
   const [selectedMonth, setSelectedMonth] = useState<number>(now.getMonth());
   const [selectedYear, setSelectedYear] = useState<number>(now.getFullYear());
