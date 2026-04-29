@@ -10,20 +10,23 @@ import { formatCurrency, formatDate } from "@/lib/format";
 import { PaymentItem, Customer } from "@/types";
 import { Users, Banknote, AlertTriangle, CheckCircle2, ChevronRight, Inbox, Check, X, Search, Trash2 } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "@/hooks/use-toast";
 
 export default function AdminDashboard() {
   const [payments, setPayments] = useState<PaymentItem[]>(mockPayments);
   const [customers, setCustomers] = useState<Customer[]>(mockCustomers);
   const [search, setSearch] = useState("");
+  const now = new Date();
+  const [selectedMonth, setSelectedMonth] = useState<number>(now.getMonth());
   const totalOutstanding = payments.filter((p) => !p.paid).reduce((s, p) => s + (p.amount - p.amountPaid), 0);
   const totalPaidAll = payments.reduce((s, p) => s + p.amountPaid, 0);
   const overdueCount = payments.filter((p) => !p.paid && new Date(p.dueDate) < new Date()).length;
 
-  const now = new Date();
   const totalPaidDisplay = payments
-    .filter((p) => p.paidDate && new Date(p.paidDate).getMonth() === now.getMonth() && new Date(p.paidDate).getFullYear() === now.getFullYear())
+    .filter((p) => p.paidDate && new Date(p.paidDate).getMonth() === selectedMonth && new Date(p.paidDate).getFullYear() === now.getFullYear())
     .reduce((s, p) => s + p.amountPaid, 0);
+  const monthNames = ["Januar", "Februar", "Mars", "April", "Mai", "Juni", "Juli", "August", "September", "Oktober", "November", "Desember"];
   const pendingRequests = payments.filter((p) => p.paymentRequestStatus === "pending");
 
   const getCustomerBalance = (id: string) =>
@@ -105,7 +108,19 @@ export default function AdminDashboard() {
                 <CheckCircle2 className="h-5 w-5" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm text-muted-foreground">Innbetalt</p>
+                <div className="flex items-center gap-2">
+                  <p className="text-sm text-muted-foreground">Innbetalt</p>
+                  <Select value={String(selectedMonth)} onValueChange={(v) => setSelectedMonth(Number(v))}>
+                    <SelectTrigger className="h-6 w-auto gap-1 border-border px-2 py-0 text-[11px] font-medium">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {monthNames.map((m, i) => (
+                        <SelectItem key={i} value={String(i)}>{m}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
                 <p className="text-xl font-bold tracking-tight">{formatCurrency(totalPaidDisplay)}</p>
               </div>
             </CardContent>
