@@ -19,7 +19,6 @@ export default function AdminDashboard() {
   const [payments, setPayments] = useState<PaymentItem[]>(mockPayments);
   const [customers, setCustomers] = useState<Customer[]>(mockCustomers);
   const [search, setSearch] = useState("");
-  const [paidPeriod, setPaidPeriod] = useState<"yearly" | "monthly">("yearly");
   const [paidDate, setPaidDate] = useState<Date>(new Date());
   const [datePickerOpen, setDatePickerOpen] = useState(false);
 
@@ -29,15 +28,11 @@ export default function AdminDashboard() {
 
   const selectedMonth = paidDate.getMonth();
   const selectedYear = paidDate.getFullYear();
-  const totalPaidMonthly = payments
+  const totalPaidDisplay = payments
     .filter((p) => p.paidDate && new Date(p.paidDate).getMonth() === selectedMonth && new Date(p.paidDate).getFullYear() === selectedYear)
     .reduce((s, p) => s + p.amountPaid, 0);
-  const totalPaidYearly = payments
-    .filter((p) => p.paidDate && new Date(p.paidDate).getFullYear() === selectedYear)
-    .reduce((s, p) => s + p.amountPaid, 0);
-  const totalPaidDisplay = paidPeriod === "yearly" ? totalPaidYearly : totalPaidMonthly;
   const monthNames = ["Jan", "Feb", "Mar", "Apr", "Mai", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Des"];
-  const periodLabel = paidPeriod === "yearly" ? String(selectedYear) : `${monthNames[selectedMonth]} ${selectedYear}`;
+  const periodLabel = `${monthNames[selectedMonth]} ${selectedYear}`;
   const pendingRequests = payments.filter((p) => p.paymentRequestStatus === "pending");
 
   const getCustomerBalance = (id: string) =>
@@ -119,23 +114,7 @@ export default function AdminDashboard() {
                 <CheckCircle2 className="h-5 w-5" />
               </div>
               <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <p className="text-sm text-muted-foreground">Innbetalt</p>
-                  <div className="flex rounded-md overflow-hidden border border-border text-xs font-medium leading-none">
-                    <button
-                      onClick={() => setPaidPeriod("monthly")}
-                      className={`px-2.5 py-1 transition-colors ${paidPeriod === "monthly" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-secondary"}`}
-                    >
-                      Mnd
-                    </button>
-                    <button
-                      onClick={() => setPaidPeriod("yearly")}
-                      className={`px-2.5 py-1 transition-colors ${paidPeriod === "yearly" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-secondary"}`}
-                    >
-                      År
-                    </button>
-                  </div>
-                </div>
+                <p className="text-sm text-muted-foreground">Innbetalt</p>
                 <p className="text-xl font-bold tracking-tight">{formatCurrency(totalPaidDisplay)}</p>
                 <Popover open={datePickerOpen} onOpenChange={setDatePickerOpen}>
                   <PopoverTrigger asChild>
