@@ -111,18 +111,18 @@ export default function AdminDashboard() {
                 <CheckCircle2 className="h-5 w-5" />
               </div>
               <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-1.5">
+                <div className="flex items-center gap-2">
                   <p className="text-sm text-muted-foreground">Innbetalt</p>
-                  <div className="flex rounded-md overflow-hidden border border-border text-[10px] leading-none">
+                  <div className="flex rounded-md overflow-hidden border border-border text-xs font-medium leading-none">
                     <button
                       onClick={() => setPaidPeriod("monthly")}
-                      className={`px-1.5 py-0.5 transition-colors ${paidPeriod === "monthly" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-secondary"}`}
+                      className={`px-2.5 py-1 transition-colors ${paidPeriod === "monthly" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-secondary"}`}
                     >
                       Mnd
                     </button>
                     <button
                       onClick={() => setPaidPeriod("yearly")}
-                      className={`px-1.5 py-0.5 transition-colors ${paidPeriod === "yearly" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-secondary"}`}
+                      className={`px-2.5 py-1 transition-colors ${paidPeriod === "yearly" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-secondary"}`}
                     >
                       År
                     </button>
