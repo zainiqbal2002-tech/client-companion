@@ -8,8 +8,11 @@ import { AddCustomerDialog } from "@/components/AddCustomerDialog";
 import { mockCustomers, mockPayments } from "@/data/mockData";
 import { formatCurrency, formatDate } from "@/lib/format";
 import { PaymentItem, Customer } from "@/types";
-import { Users, Banknote, AlertTriangle, CheckCircle2, ChevronRight, Inbox, Check, X, Search, Trash2 } from "lucide-react";
+import { Users, Banknote, AlertTriangle, CheckCircle2, ChevronRight, Inbox, Check, X, Search, Trash2, CalendarIcon } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { cn } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
 
 export default function AdminDashboard() {
@@ -17,19 +20,24 @@ export default function AdminDashboard() {
   const [customers, setCustomers] = useState<Customer[]>(mockCustomers);
   const [search, setSearch] = useState("");
   const [paidPeriod, setPaidPeriod] = useState<"yearly" | "monthly">("yearly");
+  const [paidDate, setPaidDate] = useState<Date>(new Date());
+  const [datePickerOpen, setDatePickerOpen] = useState(false);
 
   const totalOutstanding = payments.filter((p) => !p.paid).reduce((s, p) => s + (p.amount - p.amountPaid), 0);
   const totalPaidAll = payments.reduce((s, p) => s + p.amountPaid, 0);
   const overdueCount = payments.filter((p) => !p.paid && new Date(p.dueDate) < new Date()).length;
 
-  const now = new Date();
+  const selectedMonth = paidDate.getMonth();
+  const selectedYear = paidDate.getFullYear();
   const totalPaidMonthly = payments
-    .filter((p) => p.paidDate && new Date(p.paidDate).getMonth() === now.getMonth() && new Date(p.paidDate).getFullYear() === now.getFullYear())
+    .filter((p) => p.paidDate && new Date(p.paidDate).getMonth() === selectedMonth && new Date(p.paidDate).getFullYear() === selectedYear)
     .reduce((s, p) => s + p.amountPaid, 0);
   const totalPaidYearly = payments
-    .filter((p) => p.paidDate && new Date(p.paidDate).getFullYear() === now.getFullYear())
+    .filter((p) => p.paidDate && new Date(p.paidDate).getFullYear() === selectedYear)
     .reduce((s, p) => s + p.amountPaid, 0);
   const totalPaidDisplay = paidPeriod === "yearly" ? totalPaidYearly : totalPaidMonthly;
+  const monthNames = ["Jan", "Feb", "Mar", "Apr", "Mai", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Des"];
+  const periodLabel = paidPeriod === "yearly" ? String(selectedYear) : `${monthNames[selectedMonth]} ${selectedYear}`;
   const pendingRequests = payments.filter((p) => p.paymentRequestStatus === "pending");
 
   const getCustomerBalance = (id: string) =>
