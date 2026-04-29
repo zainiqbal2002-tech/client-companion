@@ -19,14 +19,23 @@ export default function AdminDashboard() {
   const [search, setSearch] = useState("");
   const now = new Date();
   const [selectedMonth, setSelectedMonth] = useState<number>(now.getMonth());
+  const [selectedYear, setSelectedYear] = useState<number>(now.getFullYear());
   const totalOutstanding = payments.filter((p) => !p.paid).reduce((s, p) => s + (p.amount - p.amountPaid), 0);
   const totalPaidAll = payments.reduce((s, p) => s + p.amountPaid, 0);
   const overdueCount = payments.filter((p) => !p.paid && new Date(p.dueDate) < new Date()).length;
 
   const totalPaidDisplay = payments
-    .filter((p) => p.paidDate && new Date(p.paidDate).getMonth() === selectedMonth && new Date(p.paidDate).getFullYear() === now.getFullYear())
+    .filter((p) => p.paidDate && new Date(p.paidDate).getMonth() === selectedMonth && new Date(p.paidDate).getFullYear() === selectedYear)
     .reduce((s, p) => s + p.amountPaid, 0);
   const monthNames = ["Januar", "Februar", "Mars", "April", "Mai", "Juni", "Juli", "August", "September", "Oktober", "November", "Desember"];
+  const availableYears = Array.from(
+    new Set(
+      payments
+        .filter((p) => p.paidDate)
+        .map((p) => new Date(p.paidDate as string).getFullYear())
+        .concat(now.getFullYear())
+    )
+  ).sort((a, b) => b - a);
   const pendingRequests = payments.filter((p) => p.paymentRequestStatus === "pending");
 
   const getCustomerBalance = (id: string) =>
@@ -108,7 +117,7 @@ export default function AdminDashboard() {
                 <CheckCircle2 className="h-5 w-5" />
               </div>
               <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1.5 flex-wrap">
                   <p className="text-sm text-muted-foreground">Innbetalt</p>
                   <Select value={String(selectedMonth)} onValueChange={(v) => setSelectedMonth(Number(v))}>
                     <SelectTrigger className="h-6 w-auto gap-1 border-border px-2 py-0 text-[11px] font-medium">
@@ -117,6 +126,16 @@ export default function AdminDashboard() {
                     <SelectContent>
                       {monthNames.map((m, i) => (
                         <SelectItem key={i} value={String(i)}>{m}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Select value={String(selectedYear)} onValueChange={(v) => setSelectedYear(Number(v))}>
+                    <SelectTrigger className="h-6 w-auto gap-1 border-border px-2 py-0 text-[11px] font-medium">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {availableYears.map((y) => (
+                        <SelectItem key={y} value={String(y)}>{y}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
