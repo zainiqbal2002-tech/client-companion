@@ -48,11 +48,18 @@ export default function CustomerDetail() {
         if (p.id !== paymentId) return p;
         const newPaid = p.amountPaid + partialAmount;
         const fullyPaid = newPaid >= p.amount;
+        const today = new Date().toISOString().split("T")[0];
+        const newPart = {
+          id: `pp-${Date.now()}`,
+          amount: Math.min(partialAmount, p.amount - p.amountPaid),
+          date: today,
+        };
         return {
           ...p,
           amountPaid: Math.min(newPaid, p.amount),
           paid: fullyPaid,
-          paidDate: fullyPaid ? new Date().toISOString().split("T")[0] : p.paidDate,
+          paidDate: fullyPaid ? today : p.paidDate,
+          partialPayments: [...(p.partialPayments ?? []), newPart],
         };
       })
     );
@@ -62,7 +69,7 @@ export default function CustomerDetail() {
   const markAsUnpaid = (paymentId: string) => {
     setPayments((prev) =>
       prev.map((p) =>
-        p.id === paymentId ? { ...p, paid: false, paidDate: undefined, amountPaid: 0 } : p
+        p.id === paymentId ? { ...p, paid: false, paidDate: undefined, amountPaid: 0, partialPayments: [] } : p
       )
     );
     toast({ title: "Markert som ubetalt", description: "Posten er tilbakestilt." });
