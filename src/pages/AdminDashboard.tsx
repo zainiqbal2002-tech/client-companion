@@ -8,7 +8,7 @@ import { AddCustomerDialog } from "@/components/AddCustomerDialog";
 import { mockCustomers, mockPayments } from "@/data/mockData";
 import { formatCurrency, formatDate } from "@/lib/format";
 import { PaymentItem, Customer } from "@/types";
-import { Users, Banknote, AlertTriangle, CheckCircle2, ChevronRight, Inbox, Check, X, Search, Trash2 } from "lucide-react";
+import { Users, Banknote, AlertTriangle, CheckCircle2, ChevronRight, Inbox, Check, X, Search, Trash2, Bell, MessageSquare } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "@/hooks/use-toast";
@@ -18,6 +18,15 @@ export default function AdminDashboard() {
   const [payments, setPayments] = useState<PaymentItem[]>(mockPayments);
   const [customers, setCustomers] = useState<Customer[]>(mockCustomers);
   const [search, setSearch] = useState("");
+  const [reminderDays, setReminderDays] = useState<number>(() => {
+    const stored = typeof window !== "undefined" ? localStorage.getItem("reminderDays") : null;
+    const n = stored ? parseInt(stored, 10) : NaN;
+    return Number.isFinite(n) && n >= 0 ? n : 3;
+  });
+
+  useEffect(() => {
+    localStorage.setItem("reminderDays", String(reminderDays));
+  }, [reminderDays]);
 
   // Auto-generate monthly subscription items for every customer up to current month.
   useEffect(() => {
@@ -102,6 +111,43 @@ export default function AdminDashboard() {
   const filteredCustomers = q
     ? customers.filter((c) => c.name.toLowerCase().includes(q) || (c.email ?? "").toLowerCase().includes(q))
     : customers;
+
+  // Compute upcoming reminders: unpaid items due within reminderDays (and not yet overdue).
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const upcomingReminders = payments
+    .filter((p) => !p.paid)
+    .map((p) => {
+      const due = new Date(p.dueDate);
+      due.setHours(0, 0, 0, 0);
+      const diffDays = Math.round((due.getTime() - today.getTime()) / 86400000);
+      return { p, diffDays };
+    })
+    .filter(({ diffDays }) => diffDays >= 0 && diffDays <= reminderDays)
+    .sort((a, b) => a.diffDays - b.diffDays);
+
+  // Show toast once per session when upcoming reminders exist.
+  useEffect(() => {
+    if (upcomingReminders.length === 0) return;
+    const key = `reminderToast-${new Date().toISOString().split("T")[0]}-${reminderDays}`;
+    if (sessionStorage.getItem(key)) return;
+    sessionStorage.setItem(key, "1");
+    toast({
+      title: `${upcomingReminders.length} påminnelse${upcomingReminders.length === 1 ? "" : "r"} kommer opp`,
+      description: `Forfall innen ${reminderDays} dag${reminderDays === 1 ? "" : "er"}.`,
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [upcomingReminders.length, reminderDays]);
+
+  const buildSmsLink = (customerId: string, p: PaymentItem) => {
+    const c = customers.find((cu) => cu.id === customerId);
+    if (!c?.phone) return null;
+    const remaining = formatCurrency(p.amount - p.amountPaid);
+    const due = formatDate(p.dueDate);
+    const text = `Hei! Påminnelse om ubetalt faktura: "${p.description}" på ${remaining} med forfall ${due}. Vennligst betal i tide. Takk!`;
+    const phone = c.phone.replace(/\s/g, "");
+    return `sms:${phone}?body=${encodeURIComponent(text)}`;
+  };
 
   return (
     <div className="min-h-screen bg-background">
