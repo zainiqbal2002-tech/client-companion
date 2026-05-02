@@ -247,6 +247,68 @@ export default function AdminDashboard() {
           </Card>
         )}
 
+        <Card className="border-warning/30">
+          <CardHeader className="flex-row items-center justify-between space-y-0 pb-3 gap-2">
+            <div className="flex items-center gap-2 min-w-0">
+              <Bell className="h-4 w-4 text-warning shrink-0" />
+              <CardTitle className="text-base truncate">Kommende påminnelser ({upcomingReminders.length})</CardTitle>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-muted-foreground hidden sm:inline">Varsle</span>
+              <Select value={String(reminderDays)} onValueChange={(v) => setReminderDays(Number(v))}>
+                <SelectTrigger className="h-8 w-[110px] text-xs">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {[1, 2, 3, 5, 7, 10, 14].map((d) => (
+                    <SelectItem key={d} value={String(d)}>{d} dag{d === 1 ? "" : "er"} før</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </CardHeader>
+          <CardContent className="p-0">
+            {upcomingReminders.length === 0 ? (
+              <p className="px-5 py-6 text-center text-sm text-muted-foreground">
+                Ingen forfall innen {reminderDays} dag{reminderDays === 1 ? "" : "er"} 🎉
+              </p>
+            ) : (
+              <div className="divide-y">
+                {upcomingReminders.map(({ p, diffDays }) => {
+                  const smsLink = buildSmsLink(p.customerId, p);
+                  const dayLabel =
+                    diffDays === 0 ? "I dag" : diffDays === 1 ? "I morgen" : `Om ${diffDays} dager`;
+                  return (
+                    <div key={p.id} className="flex flex-col sm:flex-row sm:items-center justify-between px-4 sm:px-5 py-3 gap-2">
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-medium truncate">{getCustomerName(p.customerId)}</p>
+                        <p className="text-xs text-muted-foreground truncate">
+                          {p.description} · Forfall {formatDate(p.dueDate)} · <span className="text-warning font-medium">{dayLabel}</span>
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-semibold whitespace-nowrap">
+                          {formatCurrency(p.amount - p.amountPaid)}
+                        </span>
+                        {smsLink ? (
+                          <Button asChild size="sm" variant="outline" className="gap-1">
+                            <a href={smsLink}>
+                              <MessageSquare className="h-3.5 w-3.5" />
+                              <span className="hidden sm:inline">Send SMS</span>
+                            </a>
+                          </Button>
+                        ) : (
+                          <span className="text-xs text-muted-foreground">Ingen tlf</span>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
         <Card>
           <CardHeader className="flex-row items-center justify-between space-y-0 pb-3">
             <CardTitle className="text-base">Alle kunder</CardTitle>
