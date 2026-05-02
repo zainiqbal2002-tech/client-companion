@@ -360,30 +360,62 @@ export default function CustomerDetail() {
                   .map((p) => {
                     const displayDate = p.paid && p.paidDate ? p.paidDate : p.dueDate;
                     const dateLabel = p.paid ? "Betalt" : "Forfall";
-                    const isPartial = !p.paid && p.amountPaid > 0;
+                    const partials = p.partialPayments ?? [];
+                    const hasPartials = partials.length > 0;
+                    const remaining = p.amount - p.amountPaid;
                     return (
-                      <div
-                        key={p.id}
-                        className="grid grid-cols-[1fr_auto] sm:grid-cols-[1fr_auto_auto_auto] items-center gap-2 sm:gap-3 px-3 sm:px-5 py-3"
-                      >
-                        <div className="min-w-0">
-                          <p className="text-sm font-medium truncate">{p.description}</p>
-                          <p className="text-xs text-muted-foreground sm:hidden">
-                            {dateLabel}: {formatDate(displayDate)}
-                          </p>
-                          {isPartial && (
-                            <p className="text-xs text-muted-foreground">
-                              Delbetalt: {formatCurrency(p.amountPaid)} av {formatCurrency(p.amount)}
+                      <div key={p.id} className="px-3 sm:px-5 py-3">
+                        <div className="grid grid-cols-[1fr_auto] sm:grid-cols-[1fr_auto_auto_auto] items-center gap-2 sm:gap-3">
+                          <div className="min-w-0">
+                            <p className="text-sm font-medium truncate">{p.description}</p>
+                            <p className="text-xs text-muted-foreground sm:hidden">
+                              {dateLabel}: {formatDate(displayDate)}
                             </p>
-                          )}
+                          </div>
+                          <span className="hidden sm:inline text-xs text-muted-foreground whitespace-nowrap">
+                            {formatDate(displayDate)}
+                          </span>
+                          <StatusBadge paid={p.paid} dueDate={p.dueDate} />
+                          <span className="text-sm font-semibold text-right whitespace-nowrap">
+                            {formatCurrency(p.amount)}
+                          </span>
                         </div>
-                        <span className="hidden sm:inline text-xs text-muted-foreground whitespace-nowrap">
-                          {formatDate(displayDate)}
-                        </span>
-                        <StatusBadge paid={p.paid} dueDate={p.dueDate} />
-                        <span className="text-sm font-semibold text-right whitespace-nowrap">
-                          {formatCurrency(p.amount)}
-                        </span>
+
+                        {hasPartials && (
+                          <div className="mt-2 ml-2 sm:ml-4 border-l-2 border-border pl-3 space-y-1">
+                            {[...partials]
+                              .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+                              .map((part, idx) => (
+                                <div
+                                  key={part.id}
+                                  className="flex items-center justify-between text-xs text-muted-foreground"
+                                >
+                                  <span>
+                                    Delbetaling {partials.length - idx} · {formatDate(part.date)}
+                                  </span>
+                                  <span className="font-medium text-success">
+                                    +{formatCurrency(part.amount)}
+                                  </span>
+                                </div>
+                              ))}
+                            <div className="flex items-center justify-between text-xs pt-1 border-t border-border/60">
+                              <span className="text-muted-foreground">
+                                Sum betalt
+                              </span>
+                              <span className="font-semibold">
+                                {formatCurrency(p.amountPaid)} av {formatCurrency(p.amount)}
+                              </span>
+                            </div>
+                            {!p.paid && remaining > 0 && (
+                              <div className="flex items-center justify-between text-xs">
+                                <span className="text-muted-foreground">Gjenstår</span>
+                                <span className="font-semibold text-warning">
+                                  {formatCurrency(remaining)}
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                        )}
                       </div>
                     );
                   })}
