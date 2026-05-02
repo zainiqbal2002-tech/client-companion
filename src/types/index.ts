@@ -1,3 +1,9 @@
+export interface PartialPayment {
+  id: string;
+  amount: number;
+  date: string;
+}
+
 export interface PaymentItem {
   id: string;
   customerId: string;
@@ -10,6 +16,7 @@ export interface PaymentItem {
   paidDate?: string;
   type: "monthly" | "annual" | "one-time";
   notes?: string;
+  partialPayments?: PartialPayment[];
   paymentRequestStatus?: "pending" | "approved" | "rejected";
   paymentRequestDate?: string;
   paymentRequestAmount?: number;
