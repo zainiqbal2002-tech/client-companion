@@ -43,6 +43,33 @@ export default function CustomerDetail() {
   const overdueCount = payments.filter((p) => !p.paid && new Date(p.dueDate) < new Date()).length;
 
   const handlePartialPayment = (paymentId: string, partialAmount: number) => {
+    const target = payments.find((p) => p.id === paymentId);
+    if (!target) return;
+    const remaining = target.amount - target.amountPaid;
+    if (!Number.isFinite(partialAmount) || partialAmount <= 0) {
+      toast({
+        title: "Ugyldig beløp",
+        description: "Beløpet må være større enn 0.",
+        variant: "destructive",
+      });
+      return;
+    }
+    if (remaining <= 0) {
+      toast({
+        title: "Allerede betalt",
+        description: "Denne posten er allerede fullt betalt.",
+        variant: "destructive",
+      });
+      return;
+    }
+    if (partialAmount > remaining) {
+      toast({
+        title: "Beløpet overstiger gjenstående",
+        description: `Maks ${formatCurrency(remaining)} kan registreres på denne posten.`,
+        variant: "destructive",
+      });
+      return;
+    }
     setPayments((prev) =>
       prev.map((p) => {
         if (p.id !== paymentId) return p;
